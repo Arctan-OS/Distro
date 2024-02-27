@@ -1,0 +1,751 @@
+diff --git a/meson.build b/meson.build
+index 72d0a141..56388d89 100644
+--- a/meson.build
++++ b/meson.build
+@@ -229,6 +229,11 @@ elif host_machine.system() == 'dripos'
+ 	rtdl_include_dirs += include_directories('sysdeps/dripos/include')
+ 	libc_include_dirs += include_directories('sysdeps/dripos/include')
+ 	subdir('sysdeps/dripos')
++elif host_machine.system() == 'arctan'
++	disable_linux_option = true
++	rtdl_include_dirs += include_directories('sysdeps/arctan/include')
++	libc_include_dirs += include_directories('sysdeps/arctan/include')
++	subdir('sysdeps/arctan')
+ else
+ 	error('No sysdeps defined for OS: ' + host_machine.system())
+ endif
+diff --git a/sysdeps/arctan/crt-x86_64/crt1.S b/sysdeps/arctan/crt-x86_64/crt1.S
+new file mode 100644
+index 00000000..e69de29b
+diff --git a/sysdeps/arctan/generic/entry.cpp b/sysdeps/arctan/generic/entry.cpp
+new file mode 100644
+index 00000000..248e8777
+--- /dev/null
++++ b/sysdeps/arctan/generic/entry.cpp
+@@ -0,0 +1,34 @@
++
++#include <stdint.h>
++#include <stdlib.h>
++#include <bits/ensure.h>
++#include <mlibc/elf/startup.h>
++
++// defined by the POSIX library
++void __mlibc_initLocale();
++
++extern "C" uintptr_t *__dlapi_entrystack();
++
++extern char **environ;
++static mlibc::exec_stack_data __mlibc_stack_data;
++
++struct LibraryGuard {
++	LibraryGuard();
++};
++
++static LibraryGuard guard;
++
++LibraryGuard::LibraryGuard() {
++	__mlibc_initLocale();
++
++	// Parse the exec() stack.
++	mlibc::parse_exec_stack(__dlapi_entrystack(), &__mlibc_stack_data);
++	mlibc::set_startup_data(__mlibc_stack_data.argc, __mlibc_stack_data.argv,
++			__mlibc_stack_data.envp);
++}
++
++extern "C" void __mlibc_entry(int (*main_fn)(int argc, char *argv[], char *env[])) {
++	// TODO: call __dlapi_enter, otherwise static builds will break (see Linux sysdeps)
++	auto result = main_fn(__mlibc_stack_data.argc, __mlibc_stack_data.argv, environ);
++	exit(result);
++}
+diff --git a/sysdeps/arctan/generic/generic.cpp b/sysdeps/arctan/generic/generic.cpp
+new file mode 100644
+index 00000000..0d00c0aa
+--- /dev/null
++++ b/sysdeps/arctan/generic/generic.cpp
+@@ -0,0 +1,275 @@
++#include <bits/ensure.h>
++#include <mlibc/debug.hpp>
++#include <mlibc/all-sysdeps.hpp>
++#include <errno.h>
++#include <dirent.h>
++#include <fcntl.h>
++#include <limits.h>
++
++namespace mlibc {
++
++void sys_libc_log(const char *message) {
++	unsigned long res;
++	asm volatile ("syscall" : "=a"(res)
++			: "a"(50), "D"(message)
++			: "rcx", "r11", "rdx");
++}
++
++void sys_libc_panic() {
++	mlibc::infoLogger() << "\e[31mmlibc: panic!" << frg::endlog;
++	asm volatile ("syscall" :
++			: "a"(12), "D"(1)
++			: "rcx", "r11", "rdx");
++}
++
++int sys_tcb_set(void *pointer) {
++	int res;
++	asm volatile ("syscall" : "=a"(res)
++			: "a"(300), "D"(pointer)
++			: "rcx", "r11", "rdx");
++	return res;
++}
++
++int sys_anon_allocate(size_t size, void **pointer) {
++	void *ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(9), "D"(0), "S"(size)
++			: "rcx", "r11");
++
++	if (!ret)
++		return sys_errno;
++
++	*pointer = ret;
++	return 0;
++}
++
++int sys_anon_free(void *pointer, size_t size) {
++	int unused_return;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(unused_return), "=d"(sys_errno)
++			: "a"(11), "D"(pointer), "S"(size)
++			: "rcx", "r11");
++
++	if (unused_return)
++		return sys_errno;
++
++	return 0;
++}
++
++#ifndef MLIBC_BUILDING_RTDL
++void sys_exit(int status) {
++	asm volatile ("syscall" :
++			: "a"(12), "D"(status)
++			: "rcx", "r11", "rdx");
++}
++#endif
++
++#ifndef MLIBC_BUILDING_RTDL
++int sys_clock_get(int clock, time_t *secs, long *nanos) {
++	return 0;
++}
++#endif
++
++int sys_open(const char *path, int flags, mode_t mode, int *fd) {
++	int ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(2), "D"(path), "S"(flags), "d"(0)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	*fd = ret;
++	return 0;
++}
++
++int sys_close(int fd) {
++	int ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(3), "D"(fd)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	return 0;
++}
++
++int sys_read(int fd, void *buf, size_t count, ssize_t *bytes_read) {
++	ssize_t ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(0), "D"(fd), "S"(buf), "d"(count)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	*bytes_read = ret;
++	return 0;
++}
++
++#ifndef MLIBC_BUILDING_RTDL
++int sys_write(int fd, const void *buf, size_t count, ssize_t *bytes_written) {
++	ssize_t ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(1), "D"(fd), "S"(buf), "d"(count)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	*bytes_written = ret;
++	return 0;
++}
++#endif
++
++
++int sys_seek(int fd, off_t offset, int whence, off_t *new_offset) {
++	off_t ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(8), "D"(fd), "S"(offset), "d"(whence)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	*new_offset = ret;
++	return 0;
++}
++
++int sys_vm_map(void *hint, size_t size, int prot, int flags,
++		int fd, off_t offset, void **window) {
++	__ensure(flags & MAP_ANONYMOUS);
++	void *ret;
++	int sys_errno;
++
++	// mlibc::infoLogger() << "calling sys_vm_map with size: " << size << frg::endlog;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(9), "D"(hint), "S"(size)
++			: "rcx", "r11");
++
++	if (!ret)
++		return sys_errno;
++
++	*window = ret;
++
++	return 0;
++}
++
++int sys_vm_unmap(void *pointer, size_t size) {
++	return sys_anon_free(pointer, size);
++}
++
++int sys_futex_wait(int *pointer, int expected, const struct timespec *time) {
++	uint64_t err;
++	asm volatile ("syscall"
++			: "=d"(err)
++			: "a"(66), "D"(pointer), "S"(expected)
++			: "rcx", "r11");
++
++	if (err) {
++		return -1;
++	}
++
++	return 0;
++}
++
++int sys_futex_wake(int *pointer) {
++	uint64_t err;
++	asm volatile ("syscall"
++			: "=d"(err)
++			: "a"(65), "D"(pointer)
++			: "rcx", "r11");
++
++	if (err) {
++		return -1;
++	}
++
++	return 0;
++}
++
++// All remaining functions are disabled in ldso.
++#ifndef MLIBC_BUILDING_RTDL
++
++int sys_sleep(time_t *secs, long *nanos) {
++	long ms = (*nanos / 1000000) + (*secs * 1000);
++	asm volatile ("syscall"
++		:
++		: "a"(6), "D"(ms)
++		: "rcx", "r11");
++	*secs = 0;
++	*nanos = 0;
++	return 0;
++}
++
++int sys_fork(pid_t *child) {
++	pid_t ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(57)
++			: "rcx", "r11");
++
++	if (ret == -1)
++		return sys_errno;
++
++	*child = ret;
++	return 0;
++}
++
++int sys_execve(const char *path, char *const argv[], char *const envp[]) {
++	int ret;
++	int sys_errno;
++
++	asm volatile ("syscall"
++			: "=a"(ret), "=d"(sys_errno)
++			: "a"(59), "D"(path), "S"(argv), "d"(envp)
++			: "rcx", "r11");
++
++	if (sys_errno != 0)
++		return sys_errno;
++
++	return 0;
++}
++
++pid_t sys_getpid() {
++	pid_t pid;
++	asm volatile ("syscall" : "=a"(pid)
++			: "a"(5)
++			: "rcx", "r11", "rdx");
++	return pid;
++}
++pid_t sys_getppid() {
++	pid_t ppid;
++	asm volatile ("syscall" : "=a"(ppid)
++			: "a"(14)
++			: "rcx", "r11", "rdx");
++	return ppid;
++}
++
++#endif // MLIBC_BUILDING_RTDL
++
++} // namespace mlibc
+diff --git a/sysdeps/arctan/include/abi-bits/access.h b/sysdeps/arctan/include/abi-bits/access.h
+new file mode 120000
+index 00000000..171f75f8
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/access.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/access.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/auxv.h b/sysdeps/arctan/include/abi-bits/auxv.h
+new file mode 120000
+index 00000000..866c8bb9
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/auxv.h
+@@ -0,0 +1 @@
++../../../../abis/dripos/auxv.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/blkcnt_t.h b/sysdeps/arctan/include/abi-bits/blkcnt_t.h
+new file mode 120000
+index 00000000..e9d9f1b4
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/blkcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/blkcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/blksize_t.h b/sysdeps/arctan/include/abi-bits/blksize_t.h
+new file mode 120000
+index 00000000..c6dfb6e0
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/blksize_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/blksize_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/clockid_t.h b/sysdeps/arctan/include/abi-bits/clockid_t.h
+new file mode 120000
+index 00000000..71f37bb6
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/clockid_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/clockid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/dev_t.h b/sysdeps/arctan/include/abi-bits/dev_t.h
+new file mode 120000
+index 00000000..0c1143b9
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/dev_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/dev_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/epoll.h b/sysdeps/arctan/include/abi-bits/epoll.h
+new file mode 120000
+index 00000000..9efc3a05
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/epoll.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/epoll.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/errno.h b/sysdeps/arctan/include/abi-bits/errno.h
+new file mode 120000
+index 00000000..2a2ab264
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/errno.h
+@@ -0,0 +1 @@
++../../../../abis/dripos/errno.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/fcntl.h b/sysdeps/arctan/include/abi-bits/fcntl.h
+new file mode 120000
+index 00000000..ea5323ad
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/fcntl.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/fcntl.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/fsblkcnt_t.h b/sysdeps/arctan/include/abi-bits/fsblkcnt_t.h
+new file mode 120000
+index 00000000..898dfb2f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/fsblkcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fsblkcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/fsfilcnt_t.h b/sysdeps/arctan/include/abi-bits/fsfilcnt_t.h
+new file mode 120000
+index 00000000..791755c9
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/fsfilcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fsfilcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/gid_t.h b/sysdeps/arctan/include/abi-bits/gid_t.h
+new file mode 120000
+index 00000000..6a772180
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/gid_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/gid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/in.h b/sysdeps/arctan/include/abi-bits/in.h
+new file mode 120000
+index 00000000..b58c683f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/in.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/in.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/ino_t.h b/sysdeps/arctan/include/abi-bits/ino_t.h
+new file mode 120000
+index 00000000..10d644e7
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/ino_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/ino_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/inotify.h b/sysdeps/arctan/include/abi-bits/inotify.h
+new file mode 120000
+index 00000000..3f19ef6e
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/inotify.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/inotify.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/ioctls.h b/sysdeps/arctan/include/abi-bits/ioctls.h
+new file mode 120000
+index 00000000..595106b6
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/ioctls.h
+@@ -0,0 +1 @@
++../../../../abis/linux/ioctls.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/limits.h b/sysdeps/arctan/include/abi-bits/limits.h
+new file mode 120000
+index 00000000..1aa58942
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/limits.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/limits.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/mode_t.h b/sysdeps/arctan/include/abi-bits/mode_t.h
+new file mode 120000
+index 00000000..29d77331
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/mode_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/mode_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/mqueue.h b/sysdeps/arctan/include/abi-bits/mqueue.h
+new file mode 120000
+index 00000000..fa87b078
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/mqueue.h
+@@ -0,0 +1 @@
++../../../../abis/linux/mqueue.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/msg.h b/sysdeps/arctan/include/abi-bits/msg.h
+new file mode 120000
+index 00000000..f402b493
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/msg.h
+@@ -0,0 +1 @@
++../../../../abis/linux/msg.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/nlink_t.h b/sysdeps/arctan/include/abi-bits/nlink_t.h
+new file mode 120000
+index 00000000..7618c27f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/nlink_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/nlink_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/packet.h b/sysdeps/arctan/include/abi-bits/packet.h
+new file mode 120000
+index 00000000..47067e21
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/packet.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/packet.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/pid_t.h b/sysdeps/arctan/include/abi-bits/pid_t.h
+new file mode 120000
+index 00000000..3fd26a7f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/pid_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/pid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/poll.h b/sysdeps/arctan/include/abi-bits/poll.h
+new file mode 120000
+index 00000000..ab989c75
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/poll.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/poll.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/ptrace.h b/sysdeps/arctan/include/abi-bits/ptrace.h
+new file mode 120000
+index 00000000..f391fb72
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/ptrace.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/ptrace.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/resource.h b/sysdeps/arctan/include/abi-bits/resource.h
+new file mode 120000
+index 00000000..3e59c750
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/resource.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/resource.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/seek-whence.h b/sysdeps/arctan/include/abi-bits/seek-whence.h
+new file mode 120000
+index 00000000..3bd41efd
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/seek-whence.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/seek-whence.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/shm.h b/sysdeps/arctan/include/abi-bits/shm.h
+new file mode 120000
+index 00000000..067d8c4f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/shm.h
+@@ -0,0 +1 @@
++../../../../abis/linux/shm.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/signal.h b/sysdeps/arctan/include/abi-bits/signal.h
+new file mode 120000
+index 00000000..b20e5119
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/signal.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/signal.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/socket.h b/sysdeps/arctan/include/abi-bits/socket.h
+new file mode 120000
+index 00000000..0e1d6be9
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/socket.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/socket.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/socklen_t.h b/sysdeps/arctan/include/abi-bits/socklen_t.h
+new file mode 120000
+index 00000000..41f3b11f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/socklen_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/socklen_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/stat.h b/sysdeps/arctan/include/abi-bits/stat.h
+new file mode 120000
+index 00000000..82642c3c
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/stat.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/stat.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/statfs.h b/sysdeps/arctan/include/abi-bits/statfs.h
+new file mode 120000
+index 00000000..e3d202f5
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/statfs.h
+@@ -0,0 +1 @@
++../../../../abis/linux/statfs.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/statvfs.h b/sysdeps/arctan/include/abi-bits/statvfs.h
+new file mode 120000
+index 00000000..1fc80c2a
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/statvfs.h
+@@ -0,0 +1 @@
++../../../../abis/linux/statvfs.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/suseconds_t.h b/sysdeps/arctan/include/abi-bits/suseconds_t.h
+new file mode 120000
+index 00000000..9ed65977
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/suseconds_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/suseconds_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/termios.h b/sysdeps/arctan/include/abi-bits/termios.h
+new file mode 120000
+index 00000000..cfcfe763
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/termios.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/termios.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/time.h b/sysdeps/arctan/include/abi-bits/time.h
+new file mode 120000
+index 00000000..2a026257
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/time.h
+@@ -0,0 +1 @@
++../../../../abis/linux/time.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/uid_t.h b/sysdeps/arctan/include/abi-bits/uid_t.h
+new file mode 120000
+index 00000000..1113eba6
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/uid_t.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/uid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/utsname.h b/sysdeps/arctan/include/abi-bits/utsname.h
+new file mode 120000
+index 00000000..17b993fe
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/utsname.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/utsname.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/vm-flags.h b/sysdeps/arctan/include/abi-bits/vm-flags.h
+new file mode 120000
+index 00000000..f1a985e6
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/vm-flags.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/vm-flags.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/wait.h b/sysdeps/arctan/include/abi-bits/wait.h
+new file mode 120000
+index 00000000..6d911c7f
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/wait.h
+@@ -0,0 +1 @@
++../../../../abis/mlibc/wait.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/xattr.h b/sysdeps/arctan/include/abi-bits/xattr.h
+new file mode 120000
+index 00000000..66412d70
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/xattr.h
+@@ -0,0 +1 @@
++../../../../abis/linux/xattr.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/meson.build b/sysdeps/arctan/meson.build
+new file mode 100644
+index 00000000..1c3aaa52
+--- /dev/null
++++ b/sysdeps/arctan/meson.build
+@@ -0,0 +1,69 @@
++
++rtdl_sources += files(
++	'generic/generic.cpp'
++)
++
++libc_sources += files(
++	'generic/entry.cpp',
++	'generic/generic.cpp',
++)
++
++if not no_headers
++	install_headers(
++		'include/abi-bits/auxv.h',
++		'include/abi-bits/seek-whence.h',
++		'include/abi-bits/vm-flags.h',
++		'include/abi-bits/errno.h',
++		'include/abi-bits/fcntl.h',
++		'include/abi-bits/in.h',
++		'include/abi-bits/resource.h',
++		'include/abi-bits/stat.h',
++		'include/abi-bits/signal.h',
++		'include/abi-bits/socket.h',
++		'include/abi-bits/termios.h',
++		'include/abi-bits/blkcnt_t.h',
++		'include/abi-bits/blksize_t.h',
++		'include/abi-bits/dev_t.h',
++		'include/abi-bits/gid_t.h',
++		'include/abi-bits/ino_t.h',
++		'include/abi-bits/mode_t.h',
++		'include/abi-bits/nlink_t.h',
++		'include/abi-bits/pid_t.h',
++		'include/abi-bits/uid_t.h',
++		'include/abi-bits/access.h',
++		'include/abi-bits/wait.h',
++		'include/abi-bits/limits.h',
++		'include/abi-bits/utsname.h',
++		'include/abi-bits/ptrace.h',
++		'include/abi-bits/poll.h',
++		'include/abi-bits/epoll.h',
++		'include/abi-bits/packet.h',
++		'include/abi-bits/inotify.h',
++		'include/abi-bits/clockid_t.h',
++		'include/abi-bits/shm.h',
++		'include/abi-bits/mqueue.h',
++		'include/abi-bits/suseconds_t.h',
++		'include/abi-bits/fsfilcnt_t.h',
++		'include/abi-bits/fsblkcnt_t.h',
++		'include/abi-bits/socklen_t.h',
++		'include/abi-bits/statfs.h',
++		'include/abi-bits/statvfs.h',
++		'include/abi-bits/ioctls.h',
++		'include/abi-bits/xattr.h',
++		'include/abi-bits/msg.h',
++		subdir: 'abi-bits',
++		follow_symlinks: true
++	)
++endif
++
++if not headers_only
++	crt = custom_target('crt1',
++		build_by_default: true,
++		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
++		input: 'crt-x86_64/crt1.S',
++		output: 'crt1.o',
++		install: true,
++		install_dir: get_option('libdir')
++	)
++endif
++
