@@ -1,14 +1,14 @@
 .PHONY: all
 all: clean
-ifeq ($(ARC_LOCAL_BUILD), 0)
+ifeq ($(LOCAL_KERNEL_DIR),)
 	git clone https://github.com/awewsomegamer/Arctan-Kernel
 	make -C Arctan-Kernel
 	cp Arctan-Kernel/bootstrap/bootstrap.elf $(ARC_ROOT)
 	cp Arctan-Kernel/kernel/kernel.elf $(ARC_ROOT)
 else
-	make -C $(ARC_ROOT)/../Arctan-Kernel
-	cp $(ARC_ROOT)/../Arctan-Kernel/bootstrap/bootstrap.elf $(ARC_ROOT)
-	cp $(ARC_ROOT)/../Arctan-Kernel/kernel/kernel.elf $(ARC_ROOT)
+	make -C $(LOCAL_KERNEL_DIR)
+	cp $(LOCAL_KERNEL_DIR)/bootstrap/bootstrap.elf $(ARC_ROOT)
+	cp $(LOCAL_KERNEL_DIR)/kernel/kernel.elf $(ARC_ROOT)
 endif
 
 .PHONY: clean
