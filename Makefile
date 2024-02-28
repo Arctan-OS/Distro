@@ -1,8 +1,19 @@
+ARC_ROOT := $(shell pwd)
+PRODUCT := $(ARC_ROOT)/Arctan
+WEBSERVER := http://awewsomegaming.net/Files/tar/
+
+export ARC_ROOT
+export PRODUCT
+export WEBSERVER
+
 ARCTAN_HOME := $(shell pwd)
 ARCTAN_INITRAMFS := $(ARCTAN_HOME)/initramfs/
 
 export ARCTAN_HOME
 export ARCTAN_INITRAMFS
+
+ARC_LOCAL_BUILD ?= 0
+export ARC_LOCAL_BUILD
 
 .PHONY: all
 all: deps
@@ -24,3 +35,24 @@ all: deps
 deps:
 	make -C deps
 
+CPPFLAG_E9HACK :=
+CPPFLAG_DEBUG :=
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT).iso -debugcon stdio -s
+
+export CPPFLAG_E9HACK
+export CPPFLAG_DEBUG
+
+debug: CPPFLAG_DEBUG = -DARC_DEBUG_ENABLE
+debug: e9hack
+
+e9hack: CPPFLAG_E9HACK = -DARC_E9HACK_ENABLE
+e9hack: all
+
+.PHONY: run
+run: all
+	qemu-system-x86_64 -enable-kvm -cpu qemu64 -d cpu_reset $(QEMUFLAGS)
+
+.PHONY: clean
+clean:
+	make -C deps clean
+	rm -rf iso *.iso kernel.elf bootstrap.elf

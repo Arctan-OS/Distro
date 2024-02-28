@@ -6,3 +6,8 @@ export ARCTAN_PORTS_HOME
 all:
 	make -C mlibc
 	make -C arctan-kernel
+
+.PHONY: clean
+clean:
+	make -C mlibc clean
+	make -C arctan-kernel clean
