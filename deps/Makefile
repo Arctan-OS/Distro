@@ -4,7 +4,7 @@ export ARCTAN_PORTS_HOME
 
 .PHONY: all
 all:
-#	make -C mlibc
+	make -C mlibc
 	make -C arctan-kernel
 
 .PHONY: clean
