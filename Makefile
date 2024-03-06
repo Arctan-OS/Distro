@@ -12,6 +12,13 @@ ARCTAN_INITRAMFS := $(ARCTAN_HOME)/initramfs/
 export ARCTAN_HOME
 export ARCTAN_INITRAMFS
 
+CPPFLAG_E9HACK :=
+CPPFLAG_DEBUG :=
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT).iso -debugcon stdio -s
+
+export CPPFLAG_E9HACK
+export CPPFLAG_DEBUG
+
 LOCAL_KERNEL_DIR ?=
 export LOCAL_KERNEL_DIR
 
@@ -30,17 +37,9 @@ all: deps
 	# Create ISO
 	grub-mkrescue -o $(PRODUCT).iso iso
 
-
 .PHONY: deps
 deps:
 	make -C deps
-
-CPPFLAG_E9HACK :=
-CPPFLAG_DEBUG :=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT).iso -debugcon stdio -s
-
-export CPPFLAG_E9HACK
-export CPPFLAG_DEBUG
 
 debug: CPPFLAG_DEBUG = -DARC_DEBUG_ENABLE
 debug: e9hack
