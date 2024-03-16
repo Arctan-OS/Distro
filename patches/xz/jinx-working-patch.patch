@@ -1,0 +1,13 @@
+diff --git xz-clean/configure xz-workdir/configure
+index d248440..dd6ce2c 100755
+--- xz-clean/configure
++++ xz-workdir/configure
+@@ -35,8 +35,6 @@ else $as_nop
+ esac
+ fi
+ 
+-
+-
+ # Reset variables that may have inherited troublesome values from
+ # the environment.
+ 

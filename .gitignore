@@ -4,3 +4,12 @@
 iso/
 initramfs/include
 initramfs/lib
+
+*-builds/
+*-pkgs/
+pkgs/
+builds/
+sources/
+.jinx-cache
+
+jinx

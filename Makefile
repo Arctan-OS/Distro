@@ -1,57 +1,56 @@
-ARC_ROOT := $(shell pwd)
-PRODUCT := $(ARC_ROOT)/Arctan
-WEBSERVER := http://awewsomegaming.net/Files/tar/
-
-export ARC_ROOT
-export PRODUCT
-export WEBSERVER
-
-ARCTAN_HOME := $(shell pwd)
-ARCTAN_INITRAMFS := $(ARCTAN_HOME)/initramfs/
-
-export ARCTAN_HOME
-export ARCTAN_INITRAMFS
-
-CPPFLAG_E9HACK :=
-CPPFLAG_DEBUG :=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT).iso -debugcon stdio -s
-
-export CPPFLAG_E9HACK
-export CPPFLAG_DEBUG
-
 LOCAL_KERNEL_DIR ?=
-export LOCAL_KERNEL_DIR
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom Arctan.iso -debugcon stdio -s
+
+KERNEL_REGEN ?= 0
 
 .PHONY: all
-all: deps
+all:
+	rm -f Arctan.iso
+	rm -rf kernel
+	$(MAKE) Arctan.iso
+
+.PHONY: Arctan.iso
+Arctan.iso: jinx kernel
+	$(MAKE) distro
+
 	mkdir -p iso/boot/grub
 
 	# Put initramfs together
 	cd initramfs/ && find . -type f | cpio -o > ../iso/boot/initramfs.cpio
 
 	# Copy various important things to grub directory
-	cp -u kernel.elf iso/boot
-	cp bootstrap.elf iso/boot
+	cp -u kernel/kernel/kernel.elf iso/boot
+	cp kernel/bootstrap/bootstrap.elf iso/boot
 	cp grub.cfg iso/boot/grub
 
 	# Create ISO
-	grub-mkrescue -o $(PRODUCT).iso iso
+	grub-mkrescue -o Arctan.iso iso
 
-.PHONY: deps
-deps:
-	make -C deps
+.PHONY: kernel
+kernel:
+	rm -f builds/kernel.built builds/kernel.packaged
+ifeq ($(LOCAL_KERNEL_DIR),)
+	git clone https://github.com/awewsomegamer/Arctan-Kernel ./kernel
+else
+	cp -r $(LOCAL_KERNEL_DIR) ./kernel/
+endif
+ifeq ($(KERNEL_REGEN),1)
+	./jinx regenerate kernel
+endif
 
-debug: CPPFLAG_DEBUG = -DARC_DEBUG_ENABLE
-debug: e9hack
+.PHONY: jinx
+jinx:
+	curl -O https://raw.githubusercontent.com/mintsuki/jinx/trunk/jinx
+	chmod +x jinx
 
-e9hack: CPPFLAG_E9HACK = -DARC_E9HACK_ENABLE
-e9hack: all
+.PHONY: distro
+distro: jinx kernel
+	./jinx build-all
+
+.PHONY: clean
+clean:
+	./jinx clean
 
 .PHONY: run
 run: all
 	qemu-system-x86_64 -enable-kvm -cpu qemu64 -d cpu_reset $(QEMUFLAGS)
-
-.PHONY: clean
-clean:
-	make -C deps clean
-	rm -rf iso *.iso kernel.elf bootstrap.elf

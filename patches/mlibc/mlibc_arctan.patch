@@ -3,20 +3,45 @@ index 72d0a141..56388d89 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -229,6 +229,11 @@ elif host_machine.system() == 'dripos'
- 	rtdl_include_dirs += include_directories('sysdeps/dripos/include')
+ 	rtld_include_dirs += include_directories('sysdeps/dripos/include')
  	libc_include_dirs += include_directories('sysdeps/dripos/include')
  	subdir('sysdeps/dripos')
 +elif host_machine.system() == 'arctan'
 +	disable_linux_option = true
-+	rtdl_include_dirs += include_directories('sysdeps/arctan/include')
++	rtld_include_dirs += include_directories('sysdeps/arctan/include')
 +	libc_include_dirs += include_directories('sysdeps/arctan/include')
 +	subdir('sysdeps/arctan')
  else
  	error('No sysdeps defined for OS: ' + host_machine.system())
  endif
+diff --git a/sysdeps/arctan/crt-x86_64/crt0.S b/sysdeps/arctan/crt-x86_64/crt0.S
+new file mode 100644
+index 00000000..381acf58
+--- /dev/null
++++ b/sysdeps/arctan/crt-x86_64/crt0.S
+@@ -0,0 +1 @@
++movq $0, %rax
 diff --git a/sysdeps/arctan/crt-x86_64/crt1.S b/sysdeps/arctan/crt-x86_64/crt1.S
 new file mode 100644
-index 00000000..e69de29b
+index 00000000..381acf58
+--- /dev/null
++++ b/sysdeps/arctan/crt-x86_64/crt1.S
+@@ -0,0 +1 @@
++movq $0, %rax
+diff --git a/sysdeps/arctan/crt-x86_64/crti.S b/sysdeps/arctan/crt-x86_64/crti.S
+new file mode 100644
+index 00000000..381acf58
+--- /dev/null
++++ b/sysdeps/arctan/crt-x86_64/crti.S
+@@ -0,0 +1 @@
++movq $0, %rax
+diff --git a/sysdeps/arctan/crt-x86_64/crtn.S b/sysdeps/arctan/crt-x86_64/crtn.S
+new file mode 100644
+index 00000000..381acf58
+--- /dev/null
++++ b/sysdeps/arctan/crt-x86_64/crtn.S
+@@ -0,0 +1 @@
++movq $0, %rax
 diff --git a/sysdeps/arctan/generic/entry.cpp b/sysdeps/arctan/generic/entry.cpp
 new file mode 100644
 index 00000000..248e8777
@@ -616,12 +641,12 @@ index 00000000..66412d70
 \ No newline at end of file
 diff --git a/sysdeps/arctan/meson.build b/sysdeps/arctan/meson.build
 new file mode 100644
-index 00000000..1c3aaa52
+index 00000000..38e943c0
 --- /dev/null
 +++ b/sysdeps/arctan/meson.build
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,97 @@
 +
-+rtdl_sources += files(
++rtld_sources += files(
 +	'generic/generic.cpp'
 +)
 +
@@ -673,17 +698,45 @@ index 00000000..1c3aaa52
 +		'include/abi-bits/ioctls.h',
 +		'include/abi-bits/xattr.h',
 +		'include/abi-bits/msg.h',
++		'include/abi-bits/time.h',
 +		subdir: 'abi-bits',
 +		follow_symlinks: true
 +	)
 +endif
 +
 +if not headers_only
-+	crt = custom_target('crt1',
++   custom_target('crt0',
++		build_by_default: true,
++		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
++		input: 'crt-x86_64/crt0.S',
++		output: 'crt0.o',
++		install: true,
++		install_dir: get_option('libdir')
++	)
++
++    custom_target('crt1',
 +		build_by_default: true,
 +		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
 +		input: 'crt-x86_64/crt1.S',
 +		output: 'crt1.o',
++		install: true,
++		install_dir: get_option('libdir')
++	)
++
++    custom_target('crti',
++		build_by_default: true,
++		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
++		input: 'crt-x86_64/crti.S',
++		output: 'crti.o',
++		install: true,
++		install_dir: get_option('libdir')
++	)
++
++	custom_target('crtn',
++		build_by_default: true,
++		command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
++		input: 'crt-x86_64/crtn.S',
++		output: 'crtn.o',
 +		install: true,
 +		install_dir: get_option('libdir')
 +	)
