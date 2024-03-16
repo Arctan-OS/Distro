@@ -1,0 +1,26 @@
+name=mlibc
+version=ff967f3ad7bbc2ac3d18ca182f37c3bfdc53bece
+revision=1
+tarball_url="https://github.com/managarm/mlibc/archive/${version}.tar.gz"
+tarball_blake2b="10a4cc0ac1010fd82f4048c7a291bf037ad08c5a50759b64362d5bdd8fd27db4de0c4320519a16d72d601f38f095365d05530de8a2edfa3f3e0418f31635c93a"
+imagedeps="meson ninja"
+hostdeps="gcc pkg-config libgcc-binaries"
+builddeps="cshim cxxshim frigg"
+deps="mlibc-headers"
+
+build() {
+        LDFLAGS="-Wl,/usr/local/libgcc-binaries/libgcc-x86_64.a" \
+    meson_configure \
+        --buildtype=debugoptimized \
+        -Dmlibc_no_headers=true \
+        -Ddefault_library=both \
+	-Ddisable_ansi_option=false -Ddisable_crypt_option=true -Ddisable_posix_option=false -Ddisable_linux_option=true \
+	-Ddisable_iconv_option=true -Ddisable_intl_option=true -Ddisable_glibc_option=false -Ddisable_bsd_option=false \
+	-Ddisable_libgcc_dependency=true
+
+    ninja -j${parallelism}
+}
+
+package() {
+    DESTDIR="${dest_dir}" ninja install
+}

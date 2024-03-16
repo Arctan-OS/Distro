@@ -1,0 +1,22 @@
+name=kernel
+source_dir="kernel"
+source_imagedeps="git"
+source_hostdeps="automake autoconf libtool pkg-config"
+imagedeps="nasm"
+hostdeps="automake autoconf libtool pkg-config gcc"
+deps="core-libs"
+
+regenerate() {
+	autotools_recursive_regen
+}
+
+build() {
+	autotools_configure \
+		TOOLCHAIN="${OS_TRIPLET}"
+
+	make -j${parallelism}
+}
+
+install() {
+	DESTDIR="${dest_dir}" make install
+}
