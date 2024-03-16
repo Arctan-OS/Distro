@@ -1,7 +1,7 @@
 LOCAL_KERNEL_DIR ?=
 QEMUFLAGS := -M q35,smm=off -m 4G -cdrom Arctan.iso -debugcon stdio -s
 
-KERNEL_REGEN ?= 0
+KERNEL_REGEN := $(shell test -e sources/kernel.regenerated; echo $$?)
 
 .PHONY: all
 all:
@@ -10,7 +10,7 @@ all:
 	$(MAKE) Arctan.iso
 
 .PHONY: Arctan.iso
-Arctan.iso:
+Arctan.iso: jinx kernel
 	$(MAKE) distro
 
 	mkdir -p iso/boot/grub
@@ -28,13 +28,14 @@ Arctan.iso:
 
 .PHONY: kernel
 kernel:
+	rm -rf kernel/
 	rm -f builds/kernel.built builds/kernel.packaged
 ifeq ($(LOCAL_KERNEL_DIR),)
 	git clone https://github.com/awewsomegamer/Arctan-Kernel ./kernel
 else
 	cp -r $(LOCAL_KERNEL_DIR) ./kernel/
 endif
-ifeq ($(KERNEL_REGEN),1)
+ifneq ($(KERNEL_REGEN),1)
 	./jinx regenerate kernel
 endif
 
@@ -44,11 +45,12 @@ jinx:
 	chmod +x jinx
 
 .PHONY: distro
-distro: jinx kernel
+distro:
 	./jinx build-all
 
 .PHONY: clean
 clean:
+	rm -rf iso
 	./jinx clean
 
 .PHONY: run
