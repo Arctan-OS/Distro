@@ -10,7 +10,7 @@ all:
 	$(MAKE) Arctan.iso
 
 .PHONY: Arctan.iso
-Arctan.iso: jinx kernel
+Arctan.iso:
 	$(MAKE) distro
 
 	mkdir -p iso/boot/grub
