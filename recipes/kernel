@@ -8,6 +8,8 @@ deps="core-libs"
 
 regenerate() {
 	autotools_recursive_regen
+
+    cp -r ${base_dir}/kernel ${build_dir}/builds/
 }
 
 build() {
