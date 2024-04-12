@@ -6,19 +6,7 @@ imagedeps="nasm"
 hostdeps="automake autoconf libtool pkg-config gcc"
 deps="core-libs"
 
-regenerate() {
-	autotools_recursive_regen
-
-    cp -r ${base_dir}/kernel ${build_dir}/builds/
-}
-
 build() {
-	autotools_configure \
-		TOOLCHAIN="${OS_TRIPLET}"
-
-	make -j${parallelism}
-}
-
-install() {
-	DESTDIR="${dest_dir}" make install
+	cp -r $source_dir $build_dir/builds/
+	make CC=$OS_TRIPLET-gcc LD=$OS_TRIPLET-ld -j${parallelism}
 }
