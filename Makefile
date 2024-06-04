@@ -1,6 +1,6 @@
 PRODUCT := Arctan.iso
 
-REPO_BASE_LINK ?= https://github.com/awewsomegamer
+REPO_BASE_LINK ?= https://github.com/Arctan-OS
 LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
 QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -s
@@ -20,7 +20,7 @@ $(PRODUCT): jinx kernel
 kernel:
 	rm -rf kernel/ builds/kernel/
 ifeq ($(LOCAL_KERNEL_DIR),)
-	git clone $(REPO_BASE_LINK)/Arctan-Kernel ./kernel/
+	git clone $(REPO_BASE_LINK)/Kernel ./kernel/
 else
 	cp -r $(LOCAL_KERNEL_DIR) ./kernel/
 endif
@@ -29,7 +29,7 @@ endif
 mb2:
 	rm -rf bootstrap/ builds/bootstrap/
 ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/Arctan-MB2BSP ./bootstrap/
+	git clone $(REPO_BASE_LINK)/MB2BSP ./bootstrap/
 else
 	cp -r $(LOCAL_BSP_DIR) ./bootstrap/
 endif
@@ -38,7 +38,7 @@ endif
 lbp:
 	rm -rf bootstrap/ builds/bootstrap/
 ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/Arctan-LimineBSP ./bootstrap/
+	git clone $(REPO_BASE_LINK)/LBPBSP ./bootstrap/
 else
 	cp -r $(LOCAL_BSP_DIR) ./bootstrap/
 endif
