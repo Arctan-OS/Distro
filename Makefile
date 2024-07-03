@@ -5,60 +5,69 @@ LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
 QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -s
 
+ARC_ROOT := $(shell pwd)
+export ARC_ROOT
+
+INITRAMFS := $(ARC_ROOT)/initramfs.cpio
+
 .PHONY: all
 all:
-	rm -f $(PRODUCT)
+	rm -f $(PRODUCT) $(INITRAMFS)
+
 	$(MAKE) $(PRODUCT)
 
-$(PRODUCT): jinx kernel
-	rm -f builds/bootstrap.built builds/bootstrap.packaged	
-	rm -f builds/kernel.built builds/kernel.packaged builds/kernel.regenerated
-
+$(PRODUCT): kernel
 	$(MAKE) distro
-
-.PHONY: kernel
-kernel:
-	rm -rf kernel/ builds/kernel/
-ifeq ($(LOCAL_KERNEL_DIR),)
-	git clone $(REPO_BASE_LINK)/Kernel ./kernel/
-else
-	cp -r $(LOCAL_KERNEL_DIR) ./kernel/
-endif
-
-.PHONY: mb2
-mb2:
-	rm -rf bootstrap/ builds/bootstrap/
-ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/MB2BSP ./bootstrap/
-else
-	cp -r $(LOCAL_BSP_DIR) ./bootstrap/
-endif
-
-.PHONY: lbp
-lbp:
-	rm -rf bootstrap/ builds/bootstrap/
-ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/LBPBSP ./bootstrap/
-else
-	cp -r $(LOCAL_BSP_DIR) ./bootstrap/
-endif
-
-jinx:
-	curl -O https://raw.githubusercontent.com/mintsuki/jinx/trunk/jinx
-	chmod +x jinx
 
 .PHONY: distro
 distro:
 	rm -rf ./kernel/.git/
 	rm -rf ./bootstrap/.git/
-
-	./jinx build-all
+	
+	# Do everything else
+	
+	# Construct the initramfs
+	cd ./initramfs/ && find . | cpio -o > $(INITRAMFS)
+	
+	# Do the two big things
+	make -C volatile/kernel
+	make -C volatile/bootstrap
 
 .PHONY: clean
-clean:
-	rm -rf iso
-	./jinx clean
+	rm -f $(INITRAMFS)
 
 .PHONY: run
 run: $(PRODUCT)
 	qemu-system-x86_64 -enable-kvm -cpu qemu64 -d cpu_reset $(QEMUFLAGS)
+
+# Bootstrappers
+# MB2
+.PHONY: mb2
+mb2:
+	rm -rf ./volatile/bootstrap
+ifeq ($(LOCAL_BSP_DIR),)
+	git clone $(REPO_BASE_LINK)/MB2BSP ./volatile/bootstrap/
+else
+	cp -r $(LOCAL_BSP_DIR) ./volatile/bootstrap/
+endif
+# /MB2
+
+# LBP
+.PHONY: lbp
+lbp:
+	rm -rf ./volatile/bootstrap
+ifeq ($(LOCAL_BSP_DIR),)
+	git clone $(REPO_BASE_LINK)/LBPBSP ./volatile/bootstrap/
+else
+	cp -r $(LOCAL_BSP_DIR) ./volatile/bootstrap/
+endif
+# /LBP
+
+.PHONY: kernel
+kernel:
+	rm -rf ./volatile/kernel
+ifeq ($(LOCAL_KERNEL_DIR),)
+	git clone $(REPO_BASE_LINK)/Kernel ./volatile/kernel/
+else
+	cp -r $(LOCAL_KERNEL_DIR) ./volatile/kernel/
+endif
