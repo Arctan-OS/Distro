@@ -12,10 +12,14 @@ uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 
 ## Requirements
 * gcc
+* ld
+* xorriso
+* nasm
 * make
 * gzip
 * cpio
 * qemu
+* See the requirements for the bootstrapper you are building with.
 
 ## Build Instructions
 The distrobution can be built with a command of the following form:
