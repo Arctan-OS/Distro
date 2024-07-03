@@ -3,7 +3,7 @@ PRODUCT := Arctan.iso
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
 LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -s
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -s -enable-kvm -cpu qemu64 -d cpu_reset
 
 ARC_ROOT := $(shell pwd)
 export ARC_ROOT
@@ -16,20 +16,17 @@ all:
 
 	$(MAKE) $(PRODUCT)
 
-$(PRODUCT): kernel
+$(PRODUCT):
 	$(MAKE) distro
 
 .PHONY: distro
-distro:
-	rm -rf ./kernel/.git/
-	rm -rf ./bootstrap/.git/
-	
-	# Do everything else
-	
-	# Construct the initramfs
+distro: kernel
+# Do everything else
+
+# Construct the initramfs
 	cd ./initramfs/ && find . | cpio -o > $(INITRAMFS)
-	
-	# Do the two big things
+
+# Do the two big things
 	make -C volatile/kernel
 	make -C volatile/bootstrap
 
@@ -38,7 +35,7 @@ distro:
 
 .PHONY: run
 run: $(PRODUCT)
-	qemu-system-x86_64 -enable-kvm -cpu qemu64 -d cpu_reset $(QEMUFLAGS)
+	qemu-system-x86_64 $(QEMUFLAGS)
 
 # Bootstrappers
 # MB2
