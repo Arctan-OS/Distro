@@ -2,3 +2,4 @@ volatile
 *.iso
 *.cpio
 initramfs/lib
+memdump.bin
