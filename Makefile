@@ -3,7 +3,7 @@ PRODUCT := Arctan.iso
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
 LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -s -enable-kvm -cpu qemu64 -d cpu_reset
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 8
 
 ARC_ROOT := $(shell pwd)
 export ARC_ROOT
