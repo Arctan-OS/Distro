@@ -3,10 +3,21 @@ PRODUCT := Arctan.iso
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
 LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 8
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4
 
 ARC_ROOT := $(shell pwd)
 export ARC_ROOT
+
+ARCH ?=
+
+ifeq ($(ARCH), x86-64)
+	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
+else
+# Default to x86-64
+	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
+endif
+
+export ARC_TARGET_ARCH
 
 INITRAMFS := $(ARC_ROOT)/initramfs.cpio
 
