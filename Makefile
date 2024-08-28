@@ -7,6 +7,10 @@ QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -enable-kvm 
 
 ARC_ROOT := $(shell pwd)
 export ARC_ROOT
+ARC_INITRAMFS := $(ARC_ROOT)/initramfs/
+export ARC_INITRAMFS
+ARC_TRIPLET :=
+export ARC_TRIPLET
 
 ARCH ?=
 
@@ -25,6 +29,7 @@ INITRAMFS := $(ARC_ROOT)/initramfs.cpio
 all:
 	rm -f $(PRODUCT) $(INITRAMFS)
 
+	$(MAKE) -C external
 	$(MAKE) $(PRODUCT)
 
 $(PRODUCT):
