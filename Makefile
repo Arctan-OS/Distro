@@ -9,18 +9,19 @@ ARC_ROOT := $(shell pwd)
 export ARC_ROOT
 ARC_INITRAMFS := $(ARC_ROOT)/initramfs/
 export ARC_INITRAMFS
-ARC_TRIPLET :=
-export ARC_TRIPLET
+ARC_TOOLCHAIN := $(ARC_ROOT)/toolchain/
+export ARC_TOOLCHAIN
+
+OS_TRIPLET := x86_64-pc-arctan-mlibc
+export OS_TRIPLET
 
 ARCH ?=
-
 ifeq ($(ARCH), x86-64)
 	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
 else
 # Default to x86-64
 	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
 endif
-
 export ARC_TARGET_ARCH
 
 INITRAMFS := $(ARC_ROOT)/initramfs.cpio
@@ -28,8 +29,14 @@ INITRAMFS := $(ARC_ROOT)/initramfs.cpio
 .PHONY: all
 all:
 	rm -f $(PRODUCT) $(INITRAMFS)
+	rm -rf $(ARC_INITRAMFS)
+	mkdir -p $(ARC_INITRAMFS) $(ARC_TOOLCHAIN)
 
-	$(MAKE) -C external
+# Make the host's toolchain under $(ARC_TOOLCHAIN)
+	$(MAKE) -C host
+# Put together the target's toolchain and other dependencies under $(ARC_INITRAMFS)
+	$(MAKE) -C target
+# Put togeth the ISO
 	$(MAKE) $(PRODUCT)
 
 $(PRODUCT):
@@ -37,17 +44,19 @@ $(PRODUCT):
 
 .PHONY: distro
 distro: kernel
-# Do everything else
-
 # Construct the initramfs
+	cp -r ./constant/* ./initramfs/
 	cd ./initramfs/ && find . | cpio -o > $(INITRAMFS)
 
 # Do the two big things
-	make -C volatile/kernel
-	make -C volatile/bootstrap
+	CC=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-ld make -C volatile/kernel
+	CC=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-ld make -C volatile/bootstrap
 
 .PHONY: clean
+clean:
 	rm -f $(INITRAMFS)
+	rm -rf $(ARC_INITRAMFS) $(ARC_TOOLCHAIN)
+	find . -type f -name "*.tar.gz" -or -name "*.complete" -delete
 
 .PHONY: run
 run: $(PRODUCT)
