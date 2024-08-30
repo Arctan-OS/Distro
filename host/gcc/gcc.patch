@@ -1,0 +1,164 @@
+diff --git a/config.sub b/config.sub
+index 38f3d037a..a73df97ad 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1749,7 +1749,7 @@ case $os in
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+ 	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* \
+-	     | fiwix* )
++	     | fiwix* | mlibc* )
+ 		;;
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
+@@ -1777,6 +1777,8 @@ case $kernel-$os in
+ 		echo "Invalid configuration \`$1': libc \`$os' needs explicit kernel." 1>&2
+ 		exit 1
+ 		;;
++	arctan-mlibc*)
++		;;
+ 	kfreebsd*-gnu* | kopensolaris*-gnu*)
+ 		;;
+ 	vxworks-simlinux | vxworks-simwindows | vxworks-spe)
+diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
+index df90720b7..881b4306d 100755
+--- a/fixincludes/mkfixinc.sh
++++ b/fixincludes/mkfixinc.sh
+@@ -11,6 +11,8 @@ target=fixinc.sh
+ 
+ # Check for special fix rules for particular targets
+ case $machine in
++    *-mlibc* | \
++    *-*-mlibc* | \
+     i?86-*-cygwin* | \
+     i?86-*-mingw32* | \
+     x86_64-*-mingw32* | \
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index 95c91ee02..f31c8002a 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -722,6 +722,12 @@ x86_cpus="generic intel"
+ 
+ # Common parts for widely ported systems.
+ case ${target} in
++*-*-mlibc*)
++  gas=yes
++  gnu_ld=yes
++  default_use_cxa_atexit=yes
++  use_gcc_stdint=provide
++  ;;
+ *-*-darwin*)
+   tmake_file="t-darwin "
+   tm_file="${tm_file} darwin.h"
+@@ -2284,6 +2290,12 @@ i[34567]86-*-mingw* | x86_64-*-mingw*)
+ 			;;
+ 	esac
+ 	;;
++i[345678]86-*-arctan*)
++	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h glibc-stdint.h i386/i386elf.h arctan.h"
++	;;
++x86_64-*-arctan*)
++	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h arctan.h"
++	;;
+ x86_64-*-fuchsia*)
+ 	tmake_file="${tmake_file} i386/t-x86_64-elf"
+ 	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h fuchsia.h"
+diff --git a/gcc/config/arctan.h b/gcc/config/arctan.h
+new file mode 100644
+index 000000000..faf7f8ff0
+--- /dev/null
++++ b/gcc/config/arctan.h
+@@ -0,0 +1,21 @@
++#undef TARGET_ARCTAN
++#define TARGET_ARCTAN 1
++
++#undef LIB_SPEC
++#define LIB_SPEC "-lc"
++
++#undef STARTFILE_SPEC
++#define STARTFILE_SPEC "crt0.o%s crti.o%s"
++
++#undef ENDFILE_SPEC
++#define ENDFILE_SPEC "crt1.o%s crtn.o%s"
++
++#undef TARGET_OS_CPP_BUILTINS
++#define TARGET_OS_CPP_BUILTINS()		  \
++	do {					  \
++		builtin_define ("__arctan__");	  \
++		builtin_define ("__unix__");	  \
++		builtin_assert ("system=arctan"); \
++		builtin_assert ("system=unix");	  \
++		builtin_assert ("system=posix");  \
++	} while (0);
+diff --git a/libgcc/config.host b/libgcc/config.host
+index e75a7af64..0eff6d0aa 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -304,6 +304,10 @@ case ${host} in
+   tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip t-slibgcc t-slibgcc-fuchsia"
+   extra_parts="crtbegin.o crtend.o"
+   ;;
++*-*-*-mlibc)
++  extra_parts="$extra_parts crt0.o crti.o crt1.o crtn.o"
++  tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
++  ;;
+ *-*-linux* | frv-*-*linux* | *-*-kfreebsd*-gnu | *-*-gnu* | *-*-kopensolaris*-gnu | *-*-uclinuxfdpiceabi)
+   tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver t-linux"
+   extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
+@@ -752,6 +756,10 @@ x86_64-*-elf* | x86_64-*-rtems*)
+ x86_64-*-fuchsia*)
+ 	tmake_file="$tmake_file t-libgcc-pic"
+ 	;;
++x86_64-*-*-mlibc)
++	extra_parts="$extra_parts crt0.o crti.o crt1.o crtn.o"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
++	;;
+ i[34567]86-*-dragonfly*)
+ 	tmake_file="${tmake_file} i386/t-dragonfly i386/t-crtstuff"
+ 	md_unwind_header=i386/dragonfly-unwind.h
+diff --git a/libgcc/configure.ac b/libgcc/configure.ac
+index 4e8c03699..18c28d477 100644
+--- a/libgcc/configure.ac
++++ b/libgcc/configure.ac
+@@ -46,7 +46,8 @@ else
+   libgcc_topdir="${srcdir}/.."
+ fi
+ AC_SUBST(libgcc_topdir)
+-AC_CONFIG_AUX_DIR($libgcc_topdir)
++#AC_CONFIG_AUX_DIR($libgcc_topdir)
++AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_HEADER(auto-target.h:config.in)
+ 
+ AC_ARG_ENABLE(shared,
+diff --git a/libiberty/configure.ac b/libiberty/configure.ac
+index 0888e6388..1dc345cc5 100644
+--- a/libiberty/configure.ac
++++ b/libiberty/configure.ac
+@@ -37,7 +37,8 @@ else
+   libiberty_topdir="${srcdir}/.."
+ fi
+ AC_SUBST(libiberty_topdir)
+-AC_CONFIG_AUX_DIR($libiberty_topdir)
++#AC_CONFIG_AUX_DIR($libiberty_topdir)
++AC_CONFIG_AUX_DIR([.])
+ 
+ dnl Very limited version of automake's enable-maintainer-mode
+ 
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index b3269cb88..7a9e98352 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -54,6 +54,13 @@ case "${host}" in
+     AC_DEFINE(HAVE_SQRTF)
+     ;;
+ 
++  *-mlibc*)
++    GLIBCXX_CHECK_COMPILER_FEATURES
++    GLIBCXX_CHECK_LINKER_FEATURES
++    GLIBCXX_CHECK_MATH_SUPPORT
++    GLIBCXX_CHECK_STDLIB_SUPPORT
++    ;;
++
+   *-aix*)
+     GLIBCXX_CHECK_LINKER_FEATURES
+     GLIBCXX_CHECK_MATH_SUPPORT
