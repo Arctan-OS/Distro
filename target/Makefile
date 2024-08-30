@@ -10,4 +10,4 @@ export AC_FLAGS
 all:
 	make -C mlibc -j$(nproc)
 #	make -C gcc -j$(nprocs)
-	make -C bash-5.2 -j$(nproc)
+	make -C bash -j$(nproc)
