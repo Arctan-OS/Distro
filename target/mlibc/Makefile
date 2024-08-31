@@ -2,11 +2,11 @@ REPO := https://github.com/managarm/mlibc
 MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/cross.txt --prefix=$(PREFIX) \
 		-Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
 		--buildtype=debugoptimized -Ddefault_library=both \
-		--sysconfdir=/etc --localstatedir=/var --libdir=lib --sbindir=sbin --bindir=bin --includedir=include \
+		--libdir=lib --sbindir=sbin --bindir=bin --includedir=include \
 		build
 
 MLIBC_ROOT := $(ARC_ROOT)/host/mlibc/mlibc
-NINJA_FLAGS := -j8 -C build
+NINJA_FLAGS := -C build
 COMPLETE := build.complete
 
 all:
