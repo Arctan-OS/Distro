@@ -5,7 +5,7 @@ MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/cross.txt --
 		--libdir=usr/lib --bindir=usr/bin --includedir=usr/include \
 		build
 
-NINJA_FLAGS := -j8 -C build
+NINJA_FLAGS := -C build
 RCOMPLETE := mlibc/repo.complete
 COMPLETE := mlibc/build.complete
 
@@ -14,13 +14,13 @@ $(COMPLETE): $(RCOMPLETE)
 	mkdir mlibc/build
 
 	cd mlibc && meson setup $(MESON_FLAGS) -Dheaders_only=true
-	DESTDIR=$(DESTDIR) meson install -C mlibc/build
+	DESTDIR=$(ARC_DESTDIR) meson install -C mlibc/build
 
 	rm -rf mlibc/build
 	mkdir mlibc/build
 
 	cd mlibc && meson setup $(MESON_FLAGS) -Dmlibc_no_headers=true
-	DESTDIR=$(DESTDIR) meson install -C mlibc/build
+	DESTDIR=$(ARC_DESTDIR) meson install -C mlibc/build
 
 	touch $(COMPLETE)
 

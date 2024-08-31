@@ -26,6 +26,8 @@ export ARC_TARGET_ARCH
 
 INITRAMFS := $(ARC_ROOT)/initramfs.cpio
 
+MAKEFLAGS += -j$$( ($(nproc) / 2 ))
+
 .PHONY: all
 all:
 	rm -f $(PRODUCT) $(INITRAMFS)
@@ -35,9 +37,9 @@ all:
 # Make the host's toolchain under $(ARC_TOOLCHAIN)
 	$(MAKE) -C host
 # Put together the target's toolchain and other dependencies under $(ARC_INITRAMFS)
-	$(MAKE) -C target
+	$(MAKE) -C target CC=$(ARC_TOOLCHAIN)/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/bin/$(OS_TRIPLET)-ld
 # Put togeth the ISO
-	$(MAKE) $(PRODUCT)
+	$(MAKE) $(PRODUCT) CC=$(ARC_TOOLCHAIN)/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/bin/$(OS_TRIPLET)-ld
 
 $(PRODUCT):
 	$(MAKE) distro
@@ -49,14 +51,20 @@ distro: kernel
 	cd ./initramfs/ && find . | cpio -o > $(INITRAMFS)
 
 # Do the two big things
-	CC=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-ld make -C volatile/kernel
-	CC=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-gcc LD=$(ARC_TOOLCHAIN)/usr/local/bin/$(OS_TRIPLET)-ld make -C volatile/bootstrap
+	make -C volatile/kernel
+	make -C volatile/bootstrap
 
 .PHONY: clean
 clean:
 	rm -f $(INITRAMFS)
 	rm -rf $(ARC_INITRAMFS) $(ARC_TOOLCHAIN)
 	find . -type f -name "*.tar.gz" -or -name "*.complete" -delete
+
+.PHONY: prepare-rebuild
+prepare-rebuild:
+	rm -f $(INITRAMFS)
+	rm -rf $(ARC_INITRAMFS) $(ARC_TOOLCHAIN)
+	find . -type f -name "build.complete" -delete
 
 .PHONY: run
 run: $(PRODUCT)

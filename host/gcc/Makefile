@@ -4,15 +4,12 @@ export GCC_NAME
 TAR := $(GCC_NAME).tar.gz
 MIRROR := https://ftp.gnu.org/gnu/gcc/$(GCC_NAME)/$(TAR)
 
-AC_EXTRA_FLAGS := --target=$(OS_TRIPLET) \
-		  --with-prefix=/ \
-		  --with-sysroot=$(ARC_TOOLCHAIN) \
-		  --disable-nls \
+AC_EXTRA_FLAGS := \
 		  --enable-languages=c,c++,lto \
-		  --disable-multilib \
-		  --enable-initfini-array \
-		  --enable-shared \
-		  --enable-host-shared
+			--enable-shared \
+			--enable-host-shared \
+			--disable-multilib \
+			--enable-initfini-array
 
 COMPLETE := build.complete
 
@@ -21,13 +18,16 @@ $(COMPLETE): $(TAR)
 
 	rm -rf build
 	mkdir build
-	cd build && ../$(GCC_NAME)/configure $(AC_EXTRA_FLAGS)
-	make -C build all-gcc
-	make -C build install-gcc
+
+	cd build && ../$(GCC_NAME)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+
+	make -C build all-gcc all-target-libgcc
+	make -C build install-gcc install-target-libgcc
 
 	touch $(COMPLETE)
 
 $(TAR):
+	rm -rf $(GCC_NAME)
 	curl -o $(TAR) $(MIRROR)
 	tar -xf $(TAR)
 	cd $(GCC_NAME) && patch -p1 < ../gcc.patch
