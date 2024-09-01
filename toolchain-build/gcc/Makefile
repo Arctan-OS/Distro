@@ -1,8 +1,7 @@
 VERSION := 14.2.0
-GCC_NAME := gcc-$(VERSION)
-export GCC_NAME
-TAR := $(GCC_NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/gcc/$(GCC_NAME)/$(TAR)
+NAME := gcc-$(VERSION)
+TAR := $(NAME).tar.gz
+MIRROR := https://ftp.gnu.org/gnu/gcc/$(NAME)/$(TAR)
 
 AC_EXTRA_FLAGS := \
 		  --enable-languages=c,c++,lto \
@@ -14,20 +13,24 @@ AC_EXTRA_FLAGS := \
 COMPLETE := build.complete
 
 $(COMPLETE): $(TAR)
-	make -C binutils
+	$(MAKE) -C binutils
 
 	rm -rf build
 	mkdir build
 
 	cd build && ../$(GCC_NAME)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
-	make -C build all-gcc all-target-libgcc
-	make -C build install-gcc install-target-libgcc
+	$(MAKE) -C build all-gcc all-target-libgcc
+	$(MAKE) -C build install-gcc install-target-libgcc
+
+	cp -r $(ARC_SYSROOT)/bin $(ARC_DESTDIR)/bin
+	cp -r $(ARC_SYSROOT)/lib $(ARC_DESTDIR)/lib
 
 	touch $(COMPLETE)
 
 $(TAR):
-	rm -rf $(GCC_NAME)
+	rm -rf gcc-src
 	curl -o $(TAR) $(MIRROR)
 	tar -xf $(TAR)
-	cd $(GCC_NAME) && patch -p1 < ../gcc.patch
+	mv $(NAME) gcc-src
+	cd gcc-src && patch -p1 < ../gcc.patch

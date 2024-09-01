@@ -3,15 +3,15 @@ volatile
 *.cpio
 memdump.bin
 
-initramfs/
+initramfs
 
 *.tar.gz
 *.complete
 
-toolchain/
-**/build/
-host/gcc/gcc*/
-host/gcc/binutils/binutils*/
-host/mlibc/mlibc
+sysroot
 
-target/bash/bash*
+host
+build
+
+**/build
+*-src
