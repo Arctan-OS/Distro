@@ -1,0 +1,44 @@
+diff --git a/build-aux/config.sub b/build-aux/config.sub
+index 2c6a07a..333094d 100755
+--- a/build-aux/config.sub
++++ b/build-aux/config.sub
+@@ -4,7 +4,7 @@
+ 
+ # shellcheck disable=SC2006,SC2268 # see below for rationale
+ 
+-timestamp='2024-01-01'
++timestamp='2024-08-31'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1835,6 +1835,8 @@ case $kernel-$os-$obj in
+ 		;;
+ 	managarm-mlibc*- | managarm-kernel*- )
+ 		;;
++	arctan-mlibc*- )
++		;;
+ 	windows*-msvc*-)
+ 		;;
+ 	-dietlibc*- | -llvm*- | -mlibc*- | -musl*- | -newlib*- | -relibc*- \
+diff --git a/libtextstyle/build-aux/config.sub b/libtextstyle/build-aux/config.sub
+index 2c6a07a..333094d 100755
+--- a/libtextstyle/build-aux/config.sub
++++ b/libtextstyle/build-aux/config.sub
+@@ -4,7 +4,7 @@
+ 
+ # shellcheck disable=SC2006,SC2268 # see below for rationale
+ 
+-timestamp='2024-01-01'
++timestamp='2024-08-31'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1835,6 +1835,8 @@ case $kernel-$os-$obj in
+ 		;;
+ 	managarm-mlibc*- | managarm-kernel*- )
+ 		;;
++	arctan-mlibc*- )
++		;;
+ 	windows*-msvc*-)
+ 		;;
+ 	-dietlibc*- | -llvm*- | -mlibc*- | -musl*- | -newlib*- | -relibc*- \

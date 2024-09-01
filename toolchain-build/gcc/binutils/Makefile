@@ -9,14 +9,15 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../$(NAME)/configure $(AC_FLAGS)
-	make -C build
-	make -C build install
+	cd build && ../binutils-src/configure $(AC_FLAGS)
+	$(MAKE) -C build
+	$(MAKE) -C build install
 
 	touch $(COMPLETE)
 
 $(TAR):
-	rm -rf $(NAME)
+	rm -rf binutils-src
 	curl -o $(TAR) $(MIRROR)
 	tar -xf $(TAR)
-	cd $(NAME) && patch -p1 < ../binutils.patch
+	mv $(NAME) binutils-src
+	cd binutils-src && patch -p1 < ../binutils.patch
