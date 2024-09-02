@@ -8,7 +8,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../gettext-src/configure --prefix=$(ARC_DESTDIR)/usr/ $(AC_USE_TOOLCHAIN)
+	cd build && $(AC_CFLAGS) ../gettext-src/configure --prefix=$(ARC_DESTDIR)/usr/ $(AC_USE_TOOLCHAIN)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install

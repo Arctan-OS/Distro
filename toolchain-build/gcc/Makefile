@@ -4,11 +4,12 @@ TAR := $(NAME).tar.gz
 MIRROR := https://ftp.gnu.org/gnu/gcc/$(NAME)/$(TAR)
 
 AC_EXTRA_FLAGS := \
-		  --enable-languages=c,c++,lto \
-			--enable-shared \
-			--enable-host-shared \
-			--disable-multilib \
-			--enable-initfini-array
+		--with-sysroot=$(ARC_SYSROOT) \
+		--enable-languages=c,c++,lto \
+		--enable-shared \
+		--enable-host-shared \
+		--disable-multilib \
+		--enable-initfini-array
 
 COMPLETE := build.complete
 
@@ -18,13 +19,10 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../$(GCC_NAME)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc all-target-libgcc
 	$(MAKE) -C build install-gcc install-target-libgcc
-
-	cp -r $(ARC_SYSROOT)/bin $(ARC_DESTDIR)/bin
-	cp -r $(ARC_SYSROOT)/lib $(ARC_DESTDIR)/lib
 
 	touch $(COMPLETE)
 

@@ -22,6 +22,4 @@ $(COMPLETE):
 	cd $(MLIBC_ROOT) && meson setup $(MESON_FLAGS) -Dmlibc_no_headers=true
 	DESTDIR=$(ARC_SYSROOT) meson install -C $(MLIBC_ROOT)/build
 
-	cp -r $(ARC_SYSROOT)/* $(ARC_DESTDIR)/
-
 	touch $(COMPLETE)
