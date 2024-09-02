@@ -1,0 +1,53 @@
+diff --git a/build-aux/config.sub b/build-aux/config.sub
+index 7d025b7..6f34813 100755
+--- a/build-aux/config.sub
++++ b/build-aux/config.sub
+@@ -4,7 +4,7 @@
+ 
+ # shellcheck disable=SC2006,SC2268 # see below for rationale
+ 
+-timestamp='2021-08-14'
++timestamp='2024-09-01'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1336,6 +1336,10 @@ EOF
+ 		kernel=linux
+ 		os=`echo "$basic_os" | sed -e 's|linux|gnu|'`
+ 		;;
++	arctan*)
++		kernel=arctan
++		os=`echo "$basic_os" | sed -e 's|arctan|mlibc|'`
++		;;
+ 	*)
+ 		kernel=
+ 		os=$basic_os
+@@ -1697,6 +1701,9 @@ case $cpu-$vendor in
+ 	*-wrs)
+ 		os=vxworks
+ 		;;
++	*-mlibc)
++		os=mlibc
++		;;
+ 	*)
+ 		os=none
+ 		;;
+@@ -1748,7 +1755,8 @@ case $os in
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr*)
++	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* \
++	     | mlibc*)
+ 		;;
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
+@@ -1770,6 +1778,8 @@ case $kernel-$os in
+ 		;;
+ 	uclinux-uclibc* )
+ 		;;
++	arctan-mlibc* )
++		;;
+ 	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* )
+ 		# These are just libc implementations, not actual OSes, and thus
+ 		# require a kernel.

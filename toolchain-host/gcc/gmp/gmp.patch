@@ -1,0 +1,24 @@
+diff --git a/configfsf.sub b/configfsf.sub
+index bc4ca98..21e3516 100644
+--- a/configfsf.sub
++++ b/configfsf.sub
+@@ -1346,6 +1346,10 @@ EOF
+ 		kernel=managarm
+ 		os=`echo "$basic_os" | sed -e 's|managarm|mlibc|'`
+ 		;;
++	managarm*)
++		kernel=arctan
++		os=`echo "$basic_os" | sed -e 's|arctan|mlibc|'`
++		;;
+ 	*)
+ 		kernel=
+ 		os=$basic_os
+@@ -1786,6 +1790,8 @@ case $kernel-$os in
+ 		;;
+ 	managarm-mlibc* | managarm-kernel* )
+ 		;;
++	arctan-mlibc* )
++		;;
+ 	windows*-gnu* | windows*-msvc*)
+ 		;;
+ 	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* | -mlibc* )

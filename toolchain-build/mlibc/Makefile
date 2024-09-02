@@ -27,8 +27,6 @@ $(COMPLETE): $(TAR)
 	cd mlibc-src && meson setup $(MESON_FLAGS) -Dmlibc_no_headers=true
 	DESTDIR=$(ARC_SYSROOT) meson install -C mlibc-src/build
 
-	cp -r $(ARC_SYSROOT)/* $(ARC_DESTDIR)/
-
 	touch $(COMPLETE)
 
 $(TAR):

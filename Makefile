@@ -56,10 +56,9 @@ INITRAMFS_IMAGE := $(ARC_ROOT)/initramfs.cpio
 
 MAKEFLAGS += -j$(( $(shell nproc) / 2 ))
 
-USE_BUILD_TOOLS := CC=$(ARC_BUILD)/bin/$(OS_TRIPLET)-gcc \
-		   LD=$(ARC_BUILD)/bin/$(OS_TRIPLET)-ld \
-		   AR=$(ARC_BUILD)/bin/$(OS_TRIPLET)-ar \
-		   AS=$(ARC_BUILD)/bin/$(OS_TRIPLET)-as \
+PATH := $(ARC_BUILD)/usr/bin:$(PATH)
+
+export PATH
 
 .PHONY: all
 all:
@@ -72,7 +71,7 @@ all:
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
 	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
-	$(USE_BUILD_TOOLS) $(MAKE) $(ARC_PRODUCT)
+#	$(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
 	$(MAKE) distro
@@ -91,14 +90,14 @@ distro: kernel
 .PHONY: clean
 clean:
 	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)
-	$(FIND) . -type f -name "*.tar.gz" -or -name "*.complete" -delete
+	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)  $(ARC_VOLATILE)
+	find . -type f -name "*.tar.gz" -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
 	rm -f $(INITRAMFS_IMAGE)
 	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)
-	$(FIND) . -type f -name "build.complete" -delete
+	find . -type f -name "build.complete" -delete
 
 .PHONY: run
 run: $(ARC_PRODUCT)

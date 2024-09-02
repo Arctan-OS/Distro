@@ -2,12 +2,16 @@ VERSION := 5.2
 NAME := bash-$(VERSION)
 TAR := $(NAME).tar.gz
 MIRROR := https://ftp.gnu.org/gnu/bash/$(TAR)
-COMPLETE := bash-$(VERSION)/tar.complete
-AC_EXTRA_FLAGS := --with-sysroot=$(ARC_TOOLCHAIN) --host=$(OS_TRIPLET)
+COMPLETE := build.complete
 
 $(COMPLETE): $(TAR)
-	cd bash-src && ./configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
-	$(MAKE) -C bash-src install DESTDIR=$(DESTDIR)
+	rm -rf build
+	mkdir build
+
+	cd build && $(AC_CFLAGS) ../bash-src/configure $(AC_FLAGS)
+
+	$(MAKE) -C build
+	$(MAKE) -C build install
 
 	touch $(COMPLETE)
 

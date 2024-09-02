@@ -5,6 +5,8 @@ MIRROR := https://ftp.gnu.org/gnu/binutils/$(TAR)
 
 COMPLETE := build.complete
 
+AC_EXTRA_FLAGS := --with-sysroot=$(ARC_SYSROOT)
+
 $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
