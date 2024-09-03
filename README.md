@@ -104,6 +104,7 @@ This directory contains all files which are to be included in the final initramf
 is constructed in the following manner:
 1. Copy all files from host.
 2. Copy all files from initramfs-constant.
+3. Construct .cpio image.
 
 ### volatile
 

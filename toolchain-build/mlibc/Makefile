@@ -1,5 +1,5 @@
 REPO := https://github.com/managarm/mlibc
-COMMIT := 67e11fa83ed3606edd1b76c927bd3303d7c87ab9
+COMMIT := 0e63cc9b3d49f678bf330ee9d71d2eee6c1716e1
 NAME := mlibc-$(COMMIT)
 TAR := $(NAME).tar.gz
 MIRROR := $(REPO)/archive/$(COMMIT).tar.gz

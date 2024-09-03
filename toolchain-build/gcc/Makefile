@@ -9,7 +9,8 @@ AC_EXTRA_FLAGS := \
 		--enable-shared \
 		--enable-host-shared \
 		--disable-multilib \
-		--enable-initfini-array
+		--enable-initfini-array \
+		--disable-bootstrap
 
 COMPLETE := build.complete
 
