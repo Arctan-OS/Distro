@@ -37,15 +37,18 @@ diff --git a/gcc/config.gcc b/gcc/config.gcc
 index 95c91ee02..f31c8002a 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -722,6 +722,12 @@ x86_cpus="generic intel"
+@@ -722,6 +722,15 @@ x86_cpus="generic intel"
  
  # Common parts for widely ported systems.
  case ${target} in
 +*-*-mlibc*)
++  extra_options="$extra_options gnu-user.opt"
 +  gas=yes
 +  gnu_ld=yes
 +  default_use_cxa_atexit=yes
 +  use_gcc_stdint=provide
++  tmake_file="${tmake_file} t-slibgcc"
++  thread_file='posix'
 +  ;;
  *-*-darwin*)
    tmake_file="t-darwin "
@@ -55,10 +58,10 @@ index 95c91ee02..f31c8002a 100644
  	esac
  	;;
 +i[345678]86-*-arctan*)
-+	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h glibc-stdint.h i386/i386elf.h arctan.h"
++	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h gnu-user.h glibc-stdint.h i386/gnu-user-common.h arctan.h"
 +	;;
 +x86_64-*-arctan*)
-+	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h arctan.h"
++	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h gnu-user.h glibc-stdint.h i386/x86-64.h i386/gnu-user-common.h i386/gnu-user64.h arctan.h"
 +	;;
  x86_64-*-fuchsia*)
  	tmake_file="${tmake_file} i386/t-x86_64-elf"
@@ -68,7 +71,7 @@ new file mode 100644
 index 000000000..faf7f8ff0
 --- /dev/null
 +++ b/gcc/config/arctan.h
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,29 @@
 +#undef TARGET_ARCTAN
 +#define TARGET_ARCTAN 1
 +
@@ -80,6 +83,14 @@ index 000000000..faf7f8ff0
 +
 +#undef ENDFILE_SPEC
 +#define ENDFILE_SPEC "crt1.o%s crtn.o%s"
++
++#define GNU_USER_LINK_EMULATION32 "elf_i386"
++#define GNU_USER_LINK_EMULATION64 "elf_x86_64"
++#define GNU_USER_LINK_EMULATIONX32 "elf32_x86_64"
++
++#define GNU_USER_DYNAMIC_LINKER32 "/usr/lib/ld_i386.so"
++#define GNU_USER_DYNAMIC_LINKER64 "/usr/lib/ld.so"
++#define GNU_USER_DYNAMIC_LINKERX32 "/usr/lib/ld32.so"
 +
 +#undef TARGET_OS_CPP_BUILTINS
 +#define TARGET_OS_CPP_BUILTINS()		  \
@@ -148,7 +159,7 @@ diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
 index b3269cb88..7a9e98352 100644
 --- a/libstdc++-v3/crossconfig.m4
 +++ b/libstdc++-v3/crossconfig.m4
-@@ -54,6 +54,13 @@ case "${host}" in
+@@ -54,6 +54,18 @@ case "${host}" in
      AC_DEFINE(HAVE_SQRTF)
      ;;
  
@@ -157,6 +168,11 @@ index b3269cb88..7a9e98352 100644
 +    GLIBCXX_CHECK_LINKER_FEATURES
 +    GLIBCXX_CHECK_MATH_SUPPORT
 +    GLIBCXX_CHECK_STDLIB_SUPPORT
++    AC_DEFINE(_GLIBCXX_USE_DEV_RANDOM)
++    AC_DEFINE(_GLIBCXX_USE_RANDOM_TR1)
++    GCC_CHECK_TLS
++    AC_CHECK_FUNCS(aligned_alloc posix_memalign memalign _aligned_malloc)
++    AC_CHECK_FUNCS(timespec_get)
 +    ;;
 +
    *-aix*)

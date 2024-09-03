@@ -1,29 +1,24 @@
-ARC_DESTDIR := $(dir $(ARC_BUILD))
+ARC_DESTDIR := $(dir $(ARC_SYSROOT))
 
 export ARC_DESTDIR
 
-ARC_SYSROOT := $(ARC_BUILD)
-
-export ARC_SYSROOT
-
-PREFIX := /
+PREFIX := /usr
 
 export PREFIX
 
 AC_FLAGS := \
+		--with-sysroot=$(ARC_SYSROOT) \
 		--target=$(OS_TRIPLET) \
-		--prefix=$(ARC_SYSROOT)/usr \
+		--prefix=$(ARC_DESTDIR)/usr \
 		--disable-nls \
 		--disable-werror
 
 export AC_FLAGS
 
-all:
-	$(MAKE) -C mlibc
-	$(MAKE) -C gcc
+AC_CFLAGS := CFLAGS=-Wl,-rpath-link,$(ARC_BUILD)/lib
 
-	ln -sf $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/bin
-	ln -sf $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/sbin
-	ln -sf $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/include
-	ln -sf $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib
-	ln -sf $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib64
+export AC_CFLAGS
+
+all:
+	$(MAKE) -C mlibc-headers
+	$(MAKE) -C gcc

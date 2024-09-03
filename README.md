@@ -51,8 +51,7 @@ The build system is organized into the following inital directories:
 * toolchain-host
 
 And the following runtime directories:
-* build
-* host
+* sysroot
 * initramfs
 * volatile
 
@@ -66,45 +65,21 @@ may contain files used in the building of the build toolchain, host toolchain, k
 
 ### initramfs-constant
 
-These are files which are to be included in the final initramfs CPIO image. The contents of the subdirectory
-are copied after the contents of host have been copied to the initramfs.
+On each build, this directory is copied into sysroot, which is then made into a .cpio image. The original directory
+is kept, as it contains the toolchain to build the system, and the rest of the files on the system.
 
 ### toolchain-build
 
-This subdirectory includes a sysroot folder, numerous other directories which contain the various programs
-to build, and a topmost Makefile. The topmost Makefile establishes the aforementioned sysroot directory
-and initializes the build of all programs under the directory.
-
-This system does not build dependencies first,
-it will build whatever it is told to build first. Therefore, if program A depends on programs B and C, then
-the invokation of the B and C's Makefiles should be placed prior to the invokation of A's Makefile.
-
-NOTE: In the case of GCC, the build files for Binutils are placed in the aptly named "binutils" subdirectory.
-This way, when the toplevel Makefile does not have to worry about building Binutils prior to GCC, rather it 
-can blindly call to build GCC.
-
-NOTE: The sysroot merely acts as a build directory, and is not the final installation destination.
+This directory is responsible for building all tools needed by the build machine to compile for the host machine. The 
+resultant files will be installed in sysroot.
 
 ### toolchain-host
 
-This subdirectory's purpose is identical to toolchain-build, in that it builds a toolchain; however, in this case
-it instead builds it for the host machine (rather than the build machine) using the toolchain created by toolchain-build.
+This directory is responsible for building all tools needed by the host machine. Resultant files will be installed in sysroot.
 
-### build 
+### sysroot 
 
-This subdirectory contains the final installtion of the build machine's toolchain.
-
-### host
-
-This subdirectory contains the final installation of the host's toolchain.
-
-### initramfs
-
-This directory contains all files which are to be included in the final initramfs image. This directory
-is constructed in the following manner:
-1. Copy all files from host.
-2. Copy all files from initramfs-constant.
-3. Construct .cpio image.
+The system root for the host machine.
 
 ### volatile
 

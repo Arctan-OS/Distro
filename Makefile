@@ -1,27 +1,20 @@
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
 LOCAL_KERNEL_DIR ?=
 LOCAL_BSP_DIR ?=
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4
 
 ARC_PRODUCT := Arctan.iso
 
 export ARC_PRODUCT
 
+QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(ARC_PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4
+
 ARC_ROOT := $(shell pwd)
 
 export ARC_ROOT
 
-ARC_BUILD := $(ARC_ROOT)/build/
+ARC_SYSROOT := $(ARC_ROOT)/sysroot/
 
-export ARC_BUILD
-
-ARC_HOST := $(ARC_ROOT)/host/
-
-export ARC_HOST
-
-ARC_INITRAMFS := $(ARC_ROOT)/initramfs/
-
-export ARC_INITRAMFS
+export ARC_SYSROOT
 
 ARC_INITRAMFS_CONSTANT := $(ARC_ROOT)/initramfs-constant/
 
@@ -54,24 +47,31 @@ export ARC_TARGET_ARCH
 
 INITRAMFS_IMAGE := $(ARC_ROOT)/initramfs.cpio
 
-MAKEFLAGS += -j$(( $(shell nproc) / 2 ))
+MAKEFLAGS += -j12
+#$(( $(shell nproc) / 2 ))
 
-PATH := $(ARC_BUILD)/usr/bin:$(PATH)
+PATH := $(ARC_SYSROOT)/usr/bin:$(PATH)
 
 export PATH
 
 .PHONY: all
 all:
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS)
 	mkdir -p $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST) $(ARC_VOLATILE)
+	mkdir -p $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/usr/lib
+
+	ln -sfT $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/bin
+	ln -sfT $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/sbin
+	ln -sfT $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/include
+	ln -sfT $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib
+	ln -sfT $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib64
 
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
 	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
-#	$(MAKE) $(ARC_PRODUCT)
+	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
 	$(MAKE) distro
@@ -79,9 +79,8 @@ $(ARC_PRODUCT):
 .PHONY: distro
 distro: kernel
 # Construct the initramfs
-	cp -r $(ARC_INITRAMFS_CONSTANT)/* $(ARC_INITRAMFS)
-	cp -r $(ARC_INITRAMFS_CONSTANT)/* $(ARC_INITRAMFS)
-	cd $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
+	cp -r $(ARC_INITRAMFS_CONSTANT)/* $(ARC_SYSROOT)
+	cd $(ARC_SYSROOT) && find . | cpio -o > $(INITRAMFS_IMAGE)
 
 # Do the two big things
 	$(MAKE) -C volatile/kernel
@@ -90,13 +89,13 @@ distro: kernel
 .PHONY: clean
 clean:
 	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)  $(ARC_VOLATILE)
+	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT)  $(ARC_VOLATILE)
 	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
 	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)
+	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT)
 	find . -type f -name "build.complete" -delete
 
 .PHONY: run

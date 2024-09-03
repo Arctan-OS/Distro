@@ -1,12 +1,8 @@
-ARC_DESTDIR := $(dir $(ARC_HOST))
+ARC_DESTDIR := $(dir $(ARC_SYSROOT))
 
 export ARC_DESTDIR
 
-ARC_SYSROOT := $(ARC_HOST)
-
-export ARC_SYSROOT
-
-PREFIX := /
+PREFIX := /usr
 
 export PREFIX
 
@@ -19,20 +15,14 @@ AC_FLAGS := \
 
 export AC_FLAGS
 
-AC_CFLAGS := CFLAGS=-Wl,-rpath-link,$(ARC_BUILD)/lib
+AC_CFLAGS :=
+#CFLAGS=-Wl,-rpath-link,$(ARC_BUILD)/lib
 
 export AC_CFLAGS
 
 all:
-	mkdir -p $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/usr/lib
-
-	ln -sf $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/bin
-	ln -sf $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/sbin
-	ln -sf $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/include
-	ln -sf $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib
-	ln -sf $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib64
-
-	$(MAKE) -C mlibc
-	$(MAKE) -C gcc
+	$(MAKE) -C libgcc
+	$(MAKE) -C mlibc-libraries
+#	$(MAKE) -C gcc
 	$(MAKE) -C gettext
 #	$(MAKE) -C bash
