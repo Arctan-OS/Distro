@@ -4,10 +4,9 @@ NAME := mlibc-$(COMMIT)
 TAR := $(NAME).tar.gz
 MIRROR := $(REPO)/archive/$(COMMIT).tar.gz
 
-MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/cross.txt --prefix=$(PREFIX) \
-		 -Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
+MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/meson.cross --prefix=$(PREFIX) \
+		-Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
 		--buildtype=debugoptimized -Ddefault_library=both \
-		--libdir=usr/lib --bindir=usr/bin --includedir=usr/include \
 		build
 
 NINJA_FLAGS := -C build
@@ -19,12 +18,6 @@ $(COMPLETE): $(TAR)
 	mkdir mlibc-src/build
 
 	cd mlibc-src && meson setup $(MESON_FLAGS) -Dheaders_only=true
-	DESTDIR=$(ARC_SYSROOT) meson install -C mlibc-src/build
-
-	rm -rf mlibc-src/build
-	mkdir mlibc-src/build
-
-	cd mlibc-src && meson setup $(MESON_FLAGS) -Dmlibc_no_headers=true
 	DESTDIR=$(ARC_SYSROOT) meson install -C mlibc-src/build
 
 	touch $(COMPLETE)
