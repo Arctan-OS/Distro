@@ -33,6 +33,6 @@ all:
 	ln -sf $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib64
 
 	$(MAKE) -C mlibc
-#	$(MAKE) -C gcc
+	$(MAKE) -C gcc
 	$(MAKE) -C gettext
-	$(MAKE) -C bash
+#	$(MAKE) -C bash

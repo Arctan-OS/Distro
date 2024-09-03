@@ -3,7 +3,8 @@ NAME := mpc-$(VERSION)
 TAR := $(NAME).tar.gz
 MIRROR := https://ftp.gnu.org/gnu/mpc/$(TAR)
 
-AC_EXTRA_FLAGS := --with-gmp-include=$(ARC_HOST)/include --with-gmp-lib=$(ARC_HOST)/lib
+AC_EXTRA_FLAGS := --with-gmp-include=$(ARC_HOST)/include --with-gmp-lib=$(ARC_HOST)/lib \
+		  --with-mpc-include=$(ARC_HOST)/include --with-mpc-lib=$(ARC_HOST)/lib
 
 COMPLETE := build.complete
 

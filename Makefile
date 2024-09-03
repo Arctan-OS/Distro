@@ -91,7 +91,7 @@ distro: kernel
 clean:
 	rm -f $(INITRAMFS_IMAGE)
 	rm -rf $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST)  $(ARC_VOLATILE)
-	find . -type f -name "*.tar.gz" -or -name "*.complete" -delete
+	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
