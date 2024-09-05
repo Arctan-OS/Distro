@@ -11,7 +11,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && $(AC_CFLAGS) ../mpfr-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && ../mpfr-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	make -C build
 	make -C build install

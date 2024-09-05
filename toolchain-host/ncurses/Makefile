@@ -8,15 +8,16 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-#	cd build && $(AC_CFLAGS) ../$(NAME)/configure --prefix=$(ARC_DESTDIR)/usr/ $(AC_USE_TOOLCHAIN)
+	cd build &&  ../ncurses-src/configure $(AC_FLAGS) --enable-shared --enable-host-shared
 
-#	$(MAKE) -C build
-#	$(MAKE) -C build install
+	$(MAKE) -C build
+	$(MAKE) -C build install
 
-#	touch $(COMPLETE)
+	touch $(COMPLETE)
 
 $(TAR):
 	rm -rf $(NAME)
 	curl -o $(TAR) $(MIRROR)
 	tar -xf $(TAR)
-#	cd $(NAME) && patch -p1 < ../gettext.patch
+	mv $(NAME) ncurses-src
+	cd $(NAME) && patch -p1 < ../ncurses.patch

@@ -9,20 +9,22 @@ export PREFIX
 AC_FLAGS := \
 		--target=$(OS_TRIPLET) \
 		--host=$(OS_TRIPLET) \
-		--prefix=$(ARC_SYSROOT)/usr \
-		--disable-nls \
+		--prefix=$(ARC_DESTDIR)/$(PREFIX) \
+		--with-build-sysroot=$(ARC_SYSROOT) \
 		--disable-werror
 
 export AC_FLAGS
 
-AC_CFLAGS :=
-#CFLAGS=-Wl,-rpath-link,$(ARC_BUILD)/lib
-
-export AC_CFLAGS
-
 all:
-	$(MAKE) -C libgcc
 	$(MAKE) -C mlibc-libraries
-#	$(MAKE) -C gcc
+	$(MAKE) -C libgcc
+
+	$(MAKE) -C libiconv
 	$(MAKE) -C gettext
+	rm libiconv/build.complete
+	$(MAKE) -C libiconv
+
+# TODO: Do this
+#	$(MAKE) -C gcc
+#	$(MAKE) -C ncurses
 #	$(MAKE) -C bash

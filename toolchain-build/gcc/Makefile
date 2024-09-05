@@ -18,7 +18,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && $(AC_CFLAGS) ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
 	$(MAKE) -C build install-gcc

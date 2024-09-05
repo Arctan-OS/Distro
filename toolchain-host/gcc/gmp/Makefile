@@ -9,7 +9,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && $(AC_CFLAGS) ../gmp-src/configure $(AC_FLAGS)
+	cd build && ../gmp-src/configure $(AC_FLAGS)
 
 	make -C build
 	make -C build install
