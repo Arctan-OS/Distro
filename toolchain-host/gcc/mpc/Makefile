@@ -12,7 +12,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && $(AC_CFLAGS) ../mpc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && ../mpc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	make -C build
 	make -C build install

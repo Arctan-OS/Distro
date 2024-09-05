@@ -9,15 +9,11 @@ export PREFIX
 AC_FLAGS := \
 		--with-sysroot=$(ARC_SYSROOT) \
 		--target=$(OS_TRIPLET) \
-		--prefix=$(ARC_DESTDIR)/usr \
+		--prefix=$(ARC_DESTDIR)/$(PREFIX) \
 		--disable-nls \
 		--disable-werror
 
 export AC_FLAGS
-
-AC_CFLAGS := CFLAGS=-Wl,-rpath-link,$(ARC_BUILD)/lib
-
-export AC_CFLAGS
 
 all:
 	$(MAKE) -C mlibc-headers
