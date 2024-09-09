@@ -18,10 +18,10 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && $(ARC_SET_COMPILER_ENV_FLAGS) $(ARC_SET_TARGET_COMPILER_ENV_FLAGS) ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
-	$(MAKE) -C build install-gcc
+	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install-gcc
 
 	touch $(COMPLETE)
 

@@ -11,7 +11,7 @@ $(COMPLETE): $(TAR)
 	cd build &&  ../ncurses-src/configure $(AC_FLAGS) --enable-shared --enable-host-shared
 
 	$(MAKE) -C build
-	$(MAKE) -C build install
+	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install
 
 	touch $(COMPLETE)
 
