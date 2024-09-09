@@ -11,7 +11,7 @@ $(COMPLETE): $(TAR)
 	cd build && $(AC_CFLAGS) ../bash-src/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
-	$(MAKE) -C build install
+	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install
 
 	touch $(COMPLETE)
 

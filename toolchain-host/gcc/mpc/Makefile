@@ -3,19 +3,16 @@ NAME := mpc-$(VERSION)
 TAR := $(NAME).tar.gz
 MIRROR := https://ftp.gnu.org/gnu/mpc/$(TAR)
 
-AC_EXTRA_FLAGS := --with-gmp-include=$(ARC_HOST)/include --with-gmp-lib=$(ARC_HOST)/lib \
-		  --with-mpc-include=$(ARC_HOST)/include --with-mpc-lib=$(ARC_HOST)/lib
-
 COMPLETE := build.complete
 
 $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../mpc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && ../mpc-src/configure $(AC_FLAGS)
 
 	make -C build
-	make -C build install
+	DESTDIR=$(ARC_DESTDIR) make -C build install
 
 	touch $(COMPLETE)
 

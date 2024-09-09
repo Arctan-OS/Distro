@@ -9,10 +9,10 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../gmp-src/configure $(AC_FLAGS)
+	cd build && ../gmp-src/configure $(AC_FLAGS) --enable-shared
 
 	make -C build
-	make -C build install
+	DESTDIR=$(ARC_DESTDIR) make -C build install
 
 	touch $(COMPLETE)
 

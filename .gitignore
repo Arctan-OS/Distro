@@ -13,5 +13,6 @@ sysroot
 **/build
 *-src
 *-bin
+*-tmp
 
 .ccls-cache/

@@ -4,7 +4,7 @@ NAME := mlibc-$(COMMIT)
 TAR := $(NAME).tar.gz
 MIRROR := $(REPO)/archive/$(COMMIT).tar.gz
 
-MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/meson.cross --prefix=$(PREFIX) \
+MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/meson.cross --prefix=/usr \
 		-Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
 		--buildtype=debugoptimized -Ddefault_library=both \
 		build
@@ -17,7 +17,7 @@ $(COMPLETE): $(TAR)
 	rm -rf mlibc-src/build
 	mkdir mlibc-src/build
 
-	cd mlibc-src && meson setup $(MESON_FLAGS) -Dheaders_only=true
+	cd mlibc-src && $(ARC_SET_COMPILER_ENV_FLAGS) meson setup $(MESON_FLAGS) -Dheaders_only=true
 	DESTDIR=$(ARC_SYSROOT) meson install -C mlibc-src/build
 
 	touch $(COMPLETE)

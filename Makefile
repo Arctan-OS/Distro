@@ -50,26 +50,50 @@ INITRAMFS_IMAGE := $(ARC_ROOT)/initramfs.cpio
 MAKEFLAGS += -j12
 #$(( $(shell nproc) / 2 ))
 
-PATH := $(ARC_SYSROOT)/usr/bin:$(PATH)
+PREFIX := /usr/
+
+export PREFIX
+
+PATH := $(ARC_SYSROOT)/$(PREFIX)/cross/bin:$(PATH)
 
 export PATH
+
+CFLAGS=-O2 -pipe -fstack-clash-protection
+
+export CFLAGS
+
+CXXFLAGS=$(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
+
+export CXXFLAGS
+
+LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
+
+export LDFLAGS
+
+ARC_SET_BUILD_COMPILER_ENV_FLAGS := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
+
+export ARC_SET_COMPILER_ENV_FLAGS
+
+ARC_SET_TARGET_COMPILER_ENV_FLAGS := CFLAGS_FOR_TARGET="$(CFLAGS)" CXXFLAGS_FOR_TARGET="$(CXXFLAGS)"
+
+export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 
 .PHONY: all
 all:
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	mkdir -p $(ARC_INITRAMFS) $(ARC_BUILD) $(ARC_HOST) $(ARC_VOLATILE)
-	mkdir -p $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/usr/lib
+	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE)
+	mkdir -p $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/$(PREFIX)/lib
 
-	ln -sfT $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/bin
-	ln -sfT $(ARC_SYSROOT)/usr/bin $(ARC_SYSROOT)/sbin
-	ln -sfT $(ARC_SYSROOT)/usr/include $(ARC_SYSROOT)/include
-	ln -sfT $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib
-	ln -sfT $(ARC_SYSROOT)/usr/lib $(ARC_SYSROOT)/lib64
+	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/bin
+	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/sbin
+	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/include
+	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/lib $(ARC_SYSROOT)/lib
+	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/lib $(ARC_SYSROOT)/lib64
 
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
-	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
+#	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
 	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
 
@@ -89,7 +113,7 @@ distro: kernel
 .PHONY: clean
 clean:
 	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT)  $(ARC_VOLATILE)
+	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE)
 	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild

@@ -6,6 +6,6 @@ $(COMPLETE):
 
 	cd build && $(ARC_TOOLCHAIN_BUILD)/gcc/binutils/binutils-src/configure $(AC_FLAGS)
 	$(MAKE) -C build
-	$(MAKE) -C build install
+	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install
 
 	touch $(COMPLETE)
