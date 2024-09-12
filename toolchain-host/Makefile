@@ -6,8 +6,7 @@ AC_FLAGS := \
 		--target=$(OS_TRIPLET) \
 		--host=$(OS_TRIPLET) \
 		--prefix=$(PREFIX) \
-		--with-sysroot=/ \
-		--with-build-sysroot=$(ARC_SYSROOT) \
+		--with-sysroot=$(ARC_SYSROOT) \
 		--disable-werror
 
 export AC_FLAGS

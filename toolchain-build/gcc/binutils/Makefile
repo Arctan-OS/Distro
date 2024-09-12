@@ -9,6 +9,8 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
+	ARC_REGEN_DIR=binutils-src $(ARC_ROOT)/recursive_autoreconf.sh
+
 	cd build && ../binutils-src/configure $(AC_FLAGS)
 	$(MAKE) -C build
 	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install

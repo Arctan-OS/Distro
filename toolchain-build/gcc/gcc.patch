@@ -176,3 +176,29 @@ index b3269cb88..7a9e98352 100644
    *-aix*)
      GLIBCXX_CHECK_LINKER_FEATURES
      GLIBCXX_CHECK_MATH_SUPPORT
+diff --git gcc-host-clean/libcpp/Makefile.in gcc-host-workdir/libcpp/Makefile.in
+index ebbca37..ea97ba4 100644
+--- gcc-clean/libcpp/Makefile.in
++++ gcc-workdir/libcpp/Makefile.in
+@@ -32,10 +32,10 @@ AUTOCONF = @AUTOCONF@
+ AUTOHEADER = @AUTOHEADER@
+ CATALOGS = $(patsubst %,po/%,@CATALOGS@)
+ CC = @CC@
+-CFLAGS = @CFLAGS@
++override CFLAGS := @CFLAGS@
+ WARN_CFLAGS = @warn@ @c_warn@ @WARN_PEDANTIC@ @WERROR@
+ CXX = @CXX@
+-CXXFLAGS = @CXXFLAGS@
++override CXXFLAGS := @CXXFLAGS@
+ WARN_CXXFLAGS = @warn@ @WARN_PEDANTIC@ @WERROR@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+@@ -45,7 +45,7 @@ INCINTL = @INCINTL@
+ INSTALL_DATA = @INSTALL_DATA@
+ INSTALL_PROGRAM = @INSTALL_PROGRAM@
+ INSTALL_SCRIPT = @INSTALL_SCRIPT@
+-LDFLAGS = @LDFLAGS@
++override LDFLAGS := @LDFLAGS@
+ LIBICONV = @LIBICONV@
+ LIBINTL = @LIBINTL@
+ PACKAGE = @PACKAGE@

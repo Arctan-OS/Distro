@@ -54,7 +54,7 @@ PREFIX := /usr/
 
 export PREFIX
 
-PATH := $(ARC_SYSROOT)/$(PREFIX)/cross/bin:$(PATH)
+PATH := $(ARC_SYSROOT)/$(PREFIX)/local/bin:$(PATH)
 
 export PATH
 
@@ -93,7 +93,7 @@ all:
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
-#	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
+	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
 	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
 

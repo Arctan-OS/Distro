@@ -1,0 +1,33 @@
+diff --git a/build-aux/config.sub b/build-aux/config.sub
+index defe52c..b5b01e2 100755
+--- a/build-aux/config.sub
++++ b/build-aux/config.sub
+@@ -4,7 +4,7 @@
+ 
+ # shellcheck disable=SC2006,SC2268 # see below for rationale
+ 
+-timestamp='2023-09-19'
++timestamp='2024-09-06'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1325,6 +1325,10 @@ EOF
+ 		kernel=managarm
+ 		os=`echo "$basic_os" | sed -e 's|managarm|mlibc|'`
+ 		;;
++	arctan*)
++		kernel=arctan
++		os=`echo "$basic_os" | sed -e 's|arctan|mlibc|'`
++		;;
+ 	*)
+ 		kernel=
+ 		os=$basic_os
+@@ -1825,6 +1829,8 @@ case $kernel-$os-$obj in
+ 		;;
+ 	managarm-mlibc*- | managarm-kernel*- )
+ 		;;
++	arctan-mlibc*- )
++		;;
+ 	windows*-msvc*-)
+ 		;;
+ 	-dietlibc*- | -newlib*- | -musl*- | -relibc*- | -uclibc*- | -mlibc*- )

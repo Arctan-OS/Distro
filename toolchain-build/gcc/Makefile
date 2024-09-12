@@ -18,6 +18,11 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
+	ARC_RECONF_DIR=gcc-src $(ARC_ROOT)/recursive_autoreconf.sh -I"$(realpath ./gcc-src/config)"
+
+	cp -pv $(ARC_SYSROOT)/usr/local/share/libtool/build-aux/{config.sub,config.guess,install-sh} gcc-src/libgcc
+	cp -pv $(ARC_SYSROOT)/usr/local/share/libtool/build-aux/{config.sub,config.guess,install-sh} gcc-src/libiberty
+
 	cd build && $(ARC_SET_COMPILER_ENV_FLAGS) $(ARC_SET_TARGET_COMPILER_ENV_FLAGS) ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc

@@ -2,7 +2,7 @@ ARC_DESTDIR := $(dir $(ARC_SYSROOT))
 
 export ARC_DESTDIR
 
-PREFIX := $(PREFIX)/cross
+PREFIX := $(PREFIX)/local
 
 export PREFIX
 
@@ -17,5 +17,10 @@ export AC_FLAGS
 
 all:
 	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)/mlibc-headers
+	$(MAKE) -C autoconf
+	$(MAKE) -C autoconf-2.69
+	$(MAKE) -C automake
+	$(MAKE) -C libtool
+
 #	$(MAKE) -C gnulib
 	$(MAKE) -C gcc
