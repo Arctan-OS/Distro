@@ -36,8 +36,11 @@ export OS_TRIPLET
 
 ARCH ?=
 
+KARCH_TARGET := arch-x86-64
+
 ifeq ($(ARCH), x86-64)
 	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
+	KARCH_TARGET := arch-x86-64
 else
 # Default to x86-64
 	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
@@ -107,7 +110,7 @@ distro: kernel
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(INITRAMFS_IMAGE)
 
 # Do the two big things
-	$(MAKE) -C volatile/kernel
+	$(MAKE) -C volatile/kernel all $(KARCH_TARGET)
 	$(MAKE) -C volatile/bootstrap
 
 .PHONY: clean
