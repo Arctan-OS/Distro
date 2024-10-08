@@ -7,8 +7,8 @@ uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 ## Components
 * [Kernel](https://github.com/Arctan-OS/Kernel)
 * Bootstrapper
-  * [Multiboot2 (mb2)](https://github.com/Arctan-OS/MB2BSP)
-  * [Limine (lbp)](https://github.com/Arctan-OS/LBPBSP) (Work in Progress)
+  * [Multiboot2 (ARC_BSP=MB2)](https://github.com/Arctan-OS/MB2BSP)
+  * [Limine (ARC_BSP=LBP)](https://github.com/Arctan-OS/LBPBSP) (Work in Progress)
 
 ## Requirements
 * gcc
@@ -25,6 +25,10 @@ uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 * curl
 
 ## Build Instructions
+Please note that the kernel and desired bootstrapper will be cloned to the Distro's
+parent directory. If you wish to separate Arctan projects, ensure that Distro is contained
+within its own "Arctan" directory.
+
 The distrobution can be built with a command of the following form:
 
 ```shell
@@ -33,7 +37,10 @@ $ make <bsp> all
 
 Where `<bsp>` is replaced with the shortened version of the bootstrapper to use.
 For instance, if one were to build using the Multiboot2 bootstrapper, `<bsp>` would
-be substituted by `mb2`.
+be substituted by `ARC_BSP=MB2`.
+
+This will build the host and build toolchains if needed. On each call, the kernel and
+bootstrapper directories will be cleaned in order to pull in any changes you have made.
 
 The resultant ISO file can be started in `qemu-system-x86_64` using the following
 command:
@@ -83,7 +90,7 @@ The system root for the host machine.
 
 ### volatile
 
-This contains the kernel and bootstrapper which are to be built.
+This contains the products of the kernel.
 
 NOTE: It is the responsibility of the bootstrapper to construct the final product, defined by \$(ARC_PRODUCT),
 and to appropriately install the kernel executable, located at \$(ARC_ROOT)/volatile/kernel/kernel.elf, and initramfs,

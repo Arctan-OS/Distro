@@ -1,6 +1,5 @@
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
-LOCAL_KERNEL_DIR ?=
-LOCAL_BSP_DIR ?=
+ARC_BSP :=
 
 ARC_PRODUCT := Arctan.iso
 
@@ -84,7 +83,7 @@ export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 .PHONY: all
 all:
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE)
+	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT)
 	mkdir -p $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/$(PREFIX)/lib
 
 	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/bin
@@ -101,17 +100,28 @@ all:
 	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
+	mkdir -p $(ARC_ROOT)/volatile
 	$(MAKE) distro
 
 .PHONY: distro
 distro: kernel
+ifeq ($(ARC_BSP),)
+	echo "No bootstrapper specified"
+	exit 1
+endif
+
 # Construct the initramfs
 	cp -r $(ARC_INITRAMFS_CONSTANT)/* $(ARC_SYSROOT)
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(INITRAMFS_IMAGE)
 
 # Do the two big things
-	$(MAKE) -C volatile/kernel all $(KARCH_TARGET)
-	$(MAKE) -C volatile/bootstrap
+	$(MAKE) -C ../Kernel all $(KARCH_TARGET)
+
+	if [ ! -d "../$(ARC_BSP)BSP" ]; then \
+		git clone $(REPO_BASE_LINK)/$(ARC_BSP)BSP ../$(ARC_BSP)BSP; \
+		cd ../$(ARC_BSP)BSP && git submodule update --init --recursive; \
+	fi
+	$(MAKE) -C ../$(ARC_BSP)BSP all
 
 .PHONY: clean
 clean:
@@ -133,33 +143,11 @@ run: $(ARC_PRODUCT)
 # MB2
 .PHONY: mb2
 mb2:
-	mkdir -p $(ARC_VOLATILE)/bootstrap
-	rm -rf $(ARC_VOLATILE)/bootstrap
-ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/MB2BSP $(ARC_VOLATILE)/bootstrap/
-else
-	cp -r $(LOCAL_BSP_DIR) $(ARC_VOLATILE)/bootstrap/
-endif
 # /MB2
-
-# LBP
-.PHONY: lbp
-lbp:
-	mkdir -p $(ARC_VOLATILE)/bootstrap
-	rm -rf $(ARC_VOLATILE)/bootstrap
-ifeq ($(LOCAL_BSP_DIR),)
-	git clone $(REPO_BASE_LINK)/LBPBSP $(ARC_VOLATILE)/bootstrap/
-else
-	cp -r $(LOCAL_BSP_DIR) $(ARC_VOLATILE)/bootstrap/
-endif
-# /LBP
 
 .PHONY: kernel
 kernel:
-	mkdir -p $(ARC_VOLATILE)
-	rm -rf $(ARC_VOLATILE)/kernel
-ifeq ($(LOCAL_KERNEL_DIR),)
-	git clone $(REPO_BASE_LINK)/Kernel $(ARC_VOLATILE)/kernel/
-else
-	cp -r $(LOCAL_KERNEL_DIR) ./volatile/kernel/
-endif
+	if [ ! -d "../Kernel" ]; then \
+		git clone $(REPO_BASE_LINK)/Kernel ../Kernel; \
+		cd ../Kernel && git submodule update --init --recursive; \
+	fi
