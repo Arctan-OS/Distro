@@ -5,7 +5,9 @@ ARC_PRODUCT := Arctan.iso
 
 export ARC_PRODUCT
 
-QEMUFLAGS := -M q35,smm=off -m 4G -cdrom $(ARC_PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4
+QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4  \
+	     -drive file=test_disk.img,if=none,id=NVME1 \
+	     -device nvme,drive=NVME1,serial=nvme-1
 
 ARC_ROOT := $(shell pwd)
 
@@ -47,10 +49,11 @@ endif
 
 export ARC_TARGET_ARCH
 
-INITRAMFS_IMAGE := $(ARC_ROOT)/initramfs.cpio
+INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 
-MAKEFLAGS += -j12
-#$(( $(shell nproc) / 2 ))
+LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
+
+MAKEFLAGS += -j$(($(shell nproc) / 2))
 
 PREFIX := /usr/
 
@@ -111,8 +114,8 @@ ifeq ($(ARC_BSP),)
 endif
 
 # Construct the initramfs
-	cp -r $(ARC_INITRAMFS_CONSTANT)/* $(ARC_SYSROOT)
-	cd $(ARC_SYSROOT) && find . | cpio -o > $(INITRAMFS_IMAGE)
+	cd $(ARC_INITRAMFS_CONSTANT) && find . | cpio -o > $(INITRAMFS_IMAGE)
+	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
 # Do the two big things
 	$(MAKE) -C ../Kernel all $(KARCH_TARGET)
@@ -125,14 +128,12 @@ endif
 
 .PHONY: clean
 clean:
-	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE)
+	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
-	rm -f $(INITRAMFS_IMAGE)
-	rm -rf $(ARC_INITRAMFS) $(ARC_SYSROOT)
+	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	find . -type f -name "build.complete" -delete
 
 .PHONY: run
