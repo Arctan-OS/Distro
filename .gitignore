@@ -1,5 +1,6 @@
 volatile
 *.iso
+*.elf
 *.cpio
 memdump.bin
 

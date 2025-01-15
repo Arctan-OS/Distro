@@ -107,18 +107,19 @@ $(ARC_PRODUCT):
 	$(MAKE) distro
 
 .PHONY: distro
-distro: kernel
+distro: userspace
 ifeq ($(ARC_BSP),)
 	echo "No bootstrapper specified"
 	exit 1
 endif
 
+# Do the big things
+	$(MAKE) -C ../Kernel all $(KARCH_TARGET)
+	$(MAKE) -C ../Userspace all $(KARCH_TARGET)
+
 # Construct the initramfs
 	cd $(ARC_INITRAMFS_CONSTANT) && find . | cpio -o > $(INITRAMFS_IMAGE)
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
-
-# Do the two big things
-	$(MAKE) -C ../Kernel all $(KARCH_TARGET)
 
 	if [ ! -d "../$(ARC_BSP)BSP" ]; then \
 		git clone $(REPO_BASE_LINK)/$(ARC_BSP)BSP ../$(ARC_BSP)BSP; \
@@ -151,4 +152,11 @@ kernel:
 	if [ ! -d "../Kernel" ]; then \
 		git clone $(REPO_BASE_LINK)/Kernel ../Kernel; \
 		cd ../Kernel && git submodule update --init --recursive; \
+	fi
+
+.PHONY: userspace
+userspace: kernel
+	if [ ! -d "../Userspace" ]; then \
+		git clone $(REPO_BASE_LINK)/Userspace ../Userspace; \
+		cd ../Userspace && git submodule update --init --recursive; \
 	fi
