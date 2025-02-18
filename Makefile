@@ -1,86 +1,69 @@
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
-ARC_BSP :=
 
 ARC_PRODUCT := Arctan.iso
-
-export ARC_PRODUCT
-
 QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4  \
 	     -drive file=test_disk.img,if=none,id=NVME1 \
 	     -device nvme,drive=NVME1,serial=nvme-1
 
 ARC_ROOT := $(shell pwd)
 
-export ARC_ROOT
 
-ARC_SYSROOT := $(ARC_ROOT)/sysroot/
 
-export ARC_SYSROOT
+BSP ?= MB2
+ARCH ?= x86-64
+LIBC ?= mlibc
+SCHED ?= rr
 
-ARC_INITRAMFS_CONSTANT := $(ARC_ROOT)/initramfs-constant/
-
-ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build/
-
-export ARC_TOOLCHAIN_BUILD
-
-ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host/
-
-export ARC_TOOLCHAIN_HOST
-
-ARC_VOLATILE := $(ARC_ROOT)/volatile/
-
-export ARC_VOLATILE
-
-OS_TRIPLET := x86_64-pc-arctan-mlibc
-
-export OS_TRIPLET
-
-ARCH ?=
-
-KARCH_TARGET := arch-x86-64
-
-ifeq ($(ARCH), x86-64)
-	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
-	KARCH_TARGET := arch-x86-64
-else
-# Default to x86-64
-	ARC_TARGET_ARCH := -DARC_TARGET_ARCH_X86_64
+ARC_OPT_ARCH := x86_64
+ARC_DEF_ARCH := -DARC_TARGET_ARCH_X86_64
+ifeq ($(ARCH), ARM)
+# x86-64 does not need to be accoutned for, as it is the
+# default. Currently there is no support for other architectures
+# so this is just left blank as a place holder for future reference
 endif
 
-export ARC_TARGET_ARCH
+export ARC_OPT_ARCH
+export ARC_DEF_ARCH
 
+ARC_OPT_SCHED := RR
+ARC_DEF_SCHED := -DARC_TARGET_SCHED_RR
+ifeq ($(SCHED), MLFQ)
+	ARC_OPT_SCHED := MLFQ
+	ARC_DEF_SCHED := -DARC_TARGET_SCHED_MLFQ
+endif
+
+export ARC_OPT_SCHED
+export ARC_DEF_SCHED
+
+ARC_SYSROOT := $(ARC_ROOT)/sysroot/
+ARC_INITRAMFS_CONSTANT := $(ARC_ROOT)/initramfs-constant/
+ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build/
+ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host/
+ARC_VOLATILE := $(ARC_ROOT)/volatile/
+OS_TRIPLET := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
-
 LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
-
 MAKEFLAGS += -j$(($(shell nproc) / 2))
-
 PREFIX := /usr/
-
-export PREFIX
-
 PATH := $(ARC_SYSROOT)/$(PREFIX)/local/bin:$(PATH)
-
-export PATH
-
 CFLAGS=-O2 -pipe -fstack-clash-protection
-
-export CFLAGS
-
 CXXFLAGS=$(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
-
-export CXXFLAGS
-
 LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
-
-export LDFLAGS
-
 ARC_SET_BUILD_COMPILER_ENV_FLAGS := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
-
-export ARC_SET_COMPILER_ENV_FLAGS
-
 ARC_SET_TARGET_COMPILER_ENV_FLAGS := CFLAGS_FOR_TARGET="$(CFLAGS)" CXXFLAGS_FOR_TARGET="$(CXXFLAGS)"
 
+export ARC_SYSROOT
+export ARC_TOOLCHAIN_BUILD
+export ARC_TOOLCHAIN_HOST
+export ARC_VOLATILE
+export OS_TRIPLET
+export ARC_ROOT
+export ARC_PRODUCT
+export PREFIX
+export CFLAGS
+export CXXFLAGS
+export LDFLAGS
+export ARC_SET_COMPILER_ENV_FLAGS
 export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 
 .PHONY: all
@@ -108,24 +91,24 @@ $(ARC_PRODUCT):
 
 .PHONY: distro
 distro: userspace
-ifeq ($(ARC_BSP),)
+ifeq ($(BSP),)
 	echo "No bootstrapper specified"
 	exit 1
 endif
 
 # Do the big things
-	$(MAKE) -C ../Kernel all $(KARCH_TARGET)
-	$(MAKE) -C ../Userspace all $(KARCH_TARGET)
+	$(MAKE) -C ../Kernel all
+	$(MAKE) -C ../Userspace all
 
 # Construct the initramfs
 	cd $(ARC_INITRAMFS_CONSTANT) && find . | cpio -o > $(INITRAMFS_IMAGE)
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
-	if [ ! -d "../$(ARC_BSP)BSP" ]; then \
+	if [ ! -d "../$(BSP)BSP" ]; then \
 		git clone $(REPO_BASE_LINK)/$(ARC_BSP)BSP ../$(ARC_BSP)BSP; \
-		cd ../$(ARC_BSP)BSP && git submodule update --init --recursive; \
+		cd ../$(BSP)BSP && git submodule update --init --recursive; \
 	fi
-	$(MAKE) -C ../$(ARC_BSP)BSP all
+	$(MAKE) -C ../$(BSP)BSP all
 
 .PHONY: clean
 clean:
