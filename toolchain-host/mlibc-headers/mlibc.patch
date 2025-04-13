@@ -16,52 +16,56 @@ index bb8928f3..a0aad3aa 100644
  endif
 diff --git a/sysdeps/arctan/crt-x86_64/crt0.S b/sysdeps/arctan/crt-x86_64/crt0.S
 new file mode 100644
-index 00000000..381acf58
+index 00000000..d0e82138
 --- /dev/null
 +++ b/sysdeps/arctan/crt-x86_64/crt0.S
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +.section .text
 +.global _start
 +_start:
-+       mov %rsp, %rdi
-+       lea main(%rip), %rsi
-+       call __mlibc_entry
++	mov %rsp, %rdi
++	lea main(%rip), %rsi
++	call __mlibc_entry
 +.section .note.GNU-stack,"",%progbits
++
 diff --git a/sysdeps/arctan/crt-x86_64/crti.S b/sysdeps/arctan/crt-x86_64/crti.S
 new file mode 100644
-index 00000000..381acf58
+index 00000000..911b078d
 --- /dev/null
 +++ b/sysdeps/arctan/crt-x86_64/crti.S
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +.section .init
 +.global _init
 +_init:
-+       push %rax
++	push %rax
 +
 +.section .fini
 +.global _fini
 +_fini:
-+       push %rax
++	push %rax
 +.section .note.GNU-stack,"",%progbits
++
 diff --git a/sysdeps/arctan/crt-x86_64/crtn.S b/sysdeps/arctan/crt-x86_64/crtn.S
 new file mode 100644
-index 00000000..381acf58
+index 00000000..0187e50f
 --- /dev/null
 +++ b/sysdeps/arctan/crt-x86_64/crtn.S
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,9 @@
 +.section .init
-+       pop %rax
-+       ret
++	pop %rax
++	ret
++
 +.section .fini
-+       pop %rax
-+       ret
++	pop %rax
++	ret
 +.section .note.GNU-stack,"",%progbits
++
 diff --git a/sysdeps/arctan/generic/entry.cpp b/sysdeps/arctan/generic/entry.cpp
 new file mode 100644
-index 00000000..248e8777
+index 00000000..47d24156
 --- /dev/null
 +++ b/sysdeps/arctan/generic/entry.cpp
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,35 @@
 +
 +#include <stdint.h>
 +#include <stdlib.h>
@@ -72,6 +76,7 @@ index 00000000..248e8777
 +void __mlibc_initLocale();
 +
 +extern "C" uintptr_t *__dlapi_entrystack();
++extern "C" void __dlapi_enter(uintptr_t *);
 +
 +extern char **environ;
 +static mlibc::exec_stack_data __mlibc_stack_data;
@@ -91,50 +96,34 @@ index 00000000..248e8777
 +			__mlibc_stack_data.envp);
 +}
 +
-+extern "C" void __mlibc_entry(int (*main_fn)(int argc, char *argv[], char *env[])) {
-+	// TODO: call __dlapi_enter, otherwise static builds will break (see Linux sysdeps)
++extern "C" void __mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[])) {
++	__dlapi_enter(entry_stack);
 +	auto result = main_fn(__mlibc_stack_data.argc, __mlibc_stack_data.argv, environ);
 +	exit(result);
 +}
 diff --git a/sysdeps/arctan/generic/generic.cpp b/sysdeps/arctan/generic/generic.cpp
 new file mode 100644
-index 00000000..33b8d94f
+index 00000000..d5343349
 --- /dev/null
 +++ b/sysdeps/arctan/generic/generic.cpp
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,80 @@
 +#include <stdint.h>
 +#include <time.h>
 +
 +namespace mlibc {
-+	#define SYSCALL(code, args, ret) \
-+		__asm__("mov %1, %%edi; \
-+                         mov %2, %%rsi; \
-+	                 syscall" : "=a"(ret) : "a"(code), "g"(args) : "rdi", "rsi");
-+
-+	struct ARC_SyscallArgs {
-+		uint64_t a;
-+		uint64_t b;
-+		uint64_t c;
-+		uint64_t d;
-+		uint64_t e;
-+		uint64_t f;
-+		uint64_t g;
-+	}__attribute__((packed));
++	// NOTE: This assume SYS-V calling convention!
++	#define SYSCALL(code) \
++		__asm__("syscall; ret" : : "a"(code) :);
++		// RAX = code
++		// SYSCALL
++		// RAX = return code
 +
 +	void sys_libc_log(char const *str) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) str;
-+
-+		int ret = 0;
-+		SYSCALL(0x0E, &args, ret);
++		SYSCALL(0x0E);
 +	}
 +
 +	void sys_exit(int code) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) code;
-+
-+		int ret = 0;
-+		SYSCALL(0x04, &args, ret);
++		SYSCALL(0x04);
 +
 +		for (;;);
 +	}
@@ -147,158 +136,55 @@ index 00000000..33b8d94f
 +	}
 +
 +	int sys_tcb_set(void *arg) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) arg;
-+
-+		int ret = 0;
-+		SYSCALL(0x00, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x00);
 +	}
 +
 +	int sys_futex_wait(int *ptr, int expected, timespec const *time) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) ptr;
-+		args.b = (uint64_t) expected;
-+		args.c = (uint64_t) time;
-+
-+		int ret = 0;
-+		SYSCALL(0x01, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x01);
 +	}
 +
 +	int sys_futex_wake(int *ptr) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) ptr;
-+
-+		int ret = 0;
-+		SYSCALL(0x02, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x02);
 +	}
 +
 +	int sys_clock_get(int a, long *b, long *c) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) a;
-+		args.b = (uint64_t) b;
-+		args.c = (uint64_t) c;
-+
-+		int ret = 0;
-+		SYSCALL(0x03, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x03);
 +	}
 +
 +	int sys_seek(int fd, long offset, int whence, long *new_offset) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) fd;
-+		args.b = (uint64_t) offset;
-+		args.c = (uint64_t) whence;
-+		args.d = (uint64_t) new_offset;
-+
-+		int ret = 0;
-+		SYSCALL(0x05, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x05);
 +	}
 +
 +	int sys_write(int fd, void const *a, unsigned long b, long *c) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) fd;
-+		args.b = (uint64_t) a;
-+		args.c = (uint64_t) b;
-+		args.d = (uint64_t) c;
-+
-+		int ret = 0;
-+		SYSCALL(0x06, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x06);
 +	}
 +
 +	int sys_read(int fd, void *buf, unsigned long count, long *bytes_read) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) fd;
-+		args.b = (uint64_t) buf;
-+		args.c = (uint64_t) count;
-+		args.d = (uint64_t) bytes_read;
-+
-+		int ret = 0;
-+		SYSCALL(0x07, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x07);
 +	}
 +
 +	int sys_close(int fd) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) fd;
-+
-+		int ret = 0;
-+		SYSCALL(0x08, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x08);
 +	}
 +
 +	int sys_open(char const *name, int flags, unsigned int mode, int *fd) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) name;
-+		args.b = (uint64_t) flags;
-+		args.c = (uint64_t) mode;
-+		args.d = (uint64_t) fd;
-+
-+		int ret = 0;
-+		SYSCALL(0x09, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x09);
 +	}
 +
 +	int sys_vm_map(void *hint, unsigned long size, int prot, int flags, int fd, long offset, void **window) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) hint;
-+		args.b = (uint64_t) size;
-+		args.c = (uint64_t) prot;
-+		args.d = (uint64_t) flags;
-+		args.e = (uint64_t) fd;
-+		args.f = (uint64_t) offset;
-+		args.g = (uint64_t) window;
-+
-+		int ret = 0;
-+		SYSCALL(0x0A, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x0A);
 +	}
 +
 +	int sys_vm_unmap(void *a, unsigned long b) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) a;
-+		args.b = (uint64_t) b;
-+
-+		int ret = 0;
-+		SYSCALL(0x0B, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x0B);
 +	}
 +
 +	int sys_anon_allocate(unsigned long size, void **ptr) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) size;
-+		args.b = (uint64_t) ptr;
-+
-+		int ret = 0;
-+		SYSCALL(0x0C, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x0C);
 +	}
 +
 +	int sys_anon_free(void *ptr, unsigned long size) {
-+		struct ARC_SyscallArgs args;
-+		args.a = (uint64_t) ptr;
-+		args.b = (uint64_t) size;
-+
-+		int ret = 0;
-+		SYSCALL(0x0D, &args, ret);
-+
-+		return ret;
++		SYSCALL(0x0D);
 +	}
 +} // namespace mlibc
 diff --git a/sysdeps/arctan/include/abi-bits/access.h b/sysdeps/arctan/include/abi-bits/access.h
@@ -663,7 +549,7 @@ index 00000000..66412d70
 \ No newline at end of file
 diff --git a/sysdeps/arctan/meson.build b/sysdeps/arctan/meson.build
 new file mode 100644
-index 00000000..e45d4e53
+index 00000000..e9dece51
 --- /dev/null
 +++ b/sysdeps/arctan/meson.build
 @@ -0,0 +1,90 @@

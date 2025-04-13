@@ -105,7 +105,7 @@ endif
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
 	if [ ! -d "../$(BSP)BSP" ]; then \
-		git clone $(REPO_BASE_LINK)/$(ARC_BSP)BSP ../$(ARC_BSP)BSP; \
+		git clone $(REPO_BASE_LINK)/$(BSP)BSP ../$(BSP)BSP; \
 		cd ../$(BSP)BSP && git submodule update --init --recursive; \
 	fi
 	$(MAKE) -C ../$(BSP)BSP all
