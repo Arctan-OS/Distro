@@ -103,10 +103,10 @@ index 00000000..47d24156
 +}
 diff --git a/sysdeps/arctan/generic/generic.cpp b/sysdeps/arctan/generic/generic.cpp
 new file mode 100644
-index 00000000..8eb2713e
+index 00000000..504d8448
 --- /dev/null
 +++ b/sysdeps/arctan/generic/generic.cpp
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,112 @@
 +#include <stdint.h>
 +#include <time.h>
 +#include <bits/ensure.h>
@@ -119,103 +119,81 @@ index 00000000..8eb2713e
 +#include <stdlib.h>
 +
 +namespace mlibc {
-+	#pragma GCC push_options
-+	#pragma GCC optimize ("O0")
-+
 +	// Assumes SYS-V ABI
 +	#define SYSCALL(__number) \
-+		asm volatile ("" ::: "memory"); \
-+		asm volatile ("syscall; nop" : : "a"(__number) :);
++		asm volatile ("syscall" : : "a"(__number) :);
 +
 +	#define RET \
-+		asm volatile ("leave; ret");
++		asm volatile ("ret");
 +
++	#define HANG \
++		asm volatile ("1: jmp 1b");
 +
++	#define NAKED \
++		__attribute__((naked))
 +
-+	void sys_libc_log(char const *str) {
++	void NAKED sys_libc_log(char const *str) {
 +		SYSCALL(12);
 +		RET
 +	}
 +	
-+	void sys_exit(int code) {
++	void NAKED sys_exit(int code) {
 +		SYSCALL(4);
-+
-+		__builtin_unreachable();
++		HANG;
 +	}
 +
 +	void sys_libc_panic() {
 +		sys_libc_log("mlibc: panic!\n");
 +		sys_exit(1);
-+
-+		__builtin_unreachable();
++		for (;;);
 +	}
 +	
-+	int sys_tcb_set(void *arg) {
++	int NAKED sys_tcb_set(void *arg) {
 +		SYSCALL(0);
 +		RET
 +	}
 +	
-+	int sys_futex_wait(int *ptr, int expected, timespec const *time) {
++	int NAKED sys_futex_wait(int *ptr, int expected, timespec const *time) {
 +		SYSCALL(1);
 +		RET
 +	}
 +	
-+	int sys_futex_wake(int *ptr) {
++	int NAKED sys_futex_wake(int *ptr) {
 +		SYSCALL(2);
 +		RET
 +	}
 +	
-+	int sys_clock_get(int a, long *b, long *c) {
++	int NAKED sys_clock_get(int a, long *b, long *c) {
 +		SYSCALL(3);
 +		RET
 +	}
 +	
-+	int sys_seek(int fd, long offset, int whence, long *new_offset) {
++	int NAKED sys_seek(int fd, long offset, int whence, long *new_offset) {
 +		SYSCALL(5);
 +		RET
 +	}
 +
-+	int sys_write(int fd, void const *a, unsigned long b, long *c) {
-+		if (fd < 0 || a == NULL || b == 0 || c == NULL) {
-+			return -1;
-+		}
-+
++	int NAKED sys_write(int fd, void const *a, unsigned long b, long *c) {
 +		SYSCALL(6);
 +		RET
 +	}
 +	
-+	int sys_read(int fd, void *buf, unsigned long count, long *bytes_read) {
-+		if (fd < 0 || buf == NULL || count == 0 || bytes_read == NULL) {
-+			return -1;
-+		}
-+
++	int NAKED sys_read(int fd, void *buf, unsigned long count, long *bytes_read) {
 +		SYSCALL(7);
 +		RET
 +	}
 +	
-+	int sys_close(int fd) {
-+		if (fd < 0) {
-+			return -1;
-+		}
-+
++	int NAKED sys_close(int fd) {
 +		SYSCALL(8);
 +		RET
 +	}
 +	
-+	int sys_open(char const *name, int flags, unsigned int mode, int *fd) {
-+		if (name == NULL || fd == NULL) {
-+			return -1;
-+		}
-+
++	int NAKED sys_open(char const *name, int flags, unsigned int mode, int *fd) {
 +		SYSCALL(9);
 +		RET
 +	}
 +	
-+	static int __attribute__((noinline)) internal_sys_vm_map(void *hint, unsigned long size, uint64_t prot_flags, int fd, long offset, void **window) {
-+		if (window == NULL) {
-+			return -1;
-+		}
-+
++	static int NAKED internal_sys_vm_map(void *hint, unsigned long size, uint64_t prot_flags, int fd, long offset, void **window) {
 +		SYSCALL(10);
 +		RET
 +	}
@@ -224,11 +202,7 @@ index 00000000..8eb2713e
 +		return internal_sys_vm_map(hint, size, ((uint64_t)prot << 32) | (uint64_t)flags, fd, offset, window);
 +	}
 +	
-+	int __attribute__((noinline)) sys_vm_unmap(void *address, unsigned long size) {
-+		if (size == 0) {
-+			return -1;
-+		}
-+
++	int NAKED sys_vm_unmap(void *address, unsigned long size) {
 +		SYSCALL(11);
 +		RET
 +	}
@@ -244,8 +218,6 @@ index 00000000..8eb2713e
 +
 +		return sys_vm_unmap(address, size);
 +	}
-+
-+	#pragma GCC pop_options
 +} // namespace mlibc
 diff --git a/sysdeps/arctan/include/abi-bits/access.h b/sysdeps/arctan/include/abi-bits/access.h
 new file mode 120000
