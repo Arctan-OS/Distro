@@ -101,17 +101,17 @@ endif
 
 ifeq ($(wildcard ../Kernel),)
 	git clone $(REPO_BASE_LINK)/Kernel ../Kernel --depth 1
-	cd ../Kernel && git submodule --init
+	cd ../Kernel && git submodule update --init
 endif
 
 ifeq ($(wildcard ../Userspace),)
 	git clone $(REPO_BASE_LINK)/Userspace ../Userspace --depth 1
-	cd ../Userspace && git submodule --init
+	cd ../Userspace && git submodule update --init
 endif
 
 ifeq ($(wildcard ../$(BSP)BSP),)
 	git clone $(REPO_BASE_LINK)/$(BSP)BSP ../$(BSP)BSP --depth 1
-	cd ../$(BSP)BSP && git submodule --init
+	cd ../$(BSP)BSP && git submodule update --init
 endif
 
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
