@@ -1,18 +1,20 @@
 REPO_BASE_LINK ?= https://github.com/Arctan-OS
 
-ARC_PRODUCT := Arctan.iso
-QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -debugcon stdio -enable-kvm -cpu qemu64 -d cpu_reset -smp 4  \
-	     -drive file=test_disk.img,if=none,id=NVME1 \
-	     -device nvme,drive=NVME1,serial=nvme-1
-
 ARC_ROOT := $(shell pwd)
+ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
-
+export ARC_ROOT
+export ARC_PRODUCT
 
 BSP ?= MB2
 ARCH ?= x86-64
 LIBC ?= mlibc
 SCHED ?= rr
+COM ?=
+DEBUG ?=
+CORES ?= $(shell echo $$(($(shell nproc) / 2)))
+
+MAKEFLAGS += -j$(CORES)
 
 ARC_OPT_ARCH := x86_64
 ARC_DEF_ARCH := -DARC_TARGET_ARCH_X86_64
@@ -35,16 +37,40 @@ endif
 export ARC_OPT_SCHED
 export ARC_DEF_SCHED
 
-ARC_SYSROOT := $(ARC_ROOT)/sysroot/
-ARC_INITRAMFS_CONSTANT := $(ARC_ROOT)/initramfs-constant/
-ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build/
-ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host/
-ARC_VOLATILE := $(ARC_ROOT)/volatile/
+ARC_OPT_COM := $(COM)
+ARC_DEF_COM := -DARC_COM_PORT=$(ARC_OPT_COM)
+
+export ARC_OPT_COM
+export ARC_DEF_COM
+
+ARC_OPT_DEBUG := $(DEBUG)
+ifeq ($(shell echo $(DEBUG) | tr A-Z a-z),yes)
+	ARC_DEF_DEBUG := -DARC_DEBUG_ENABLE
+endif
+
+export ARC_OPT_DEBUG
+export ARC_DEF_DEBUG
+
+ARC_SYSROOT := $(ARC_ROOT)/sysroot
+ARC_INITRAMFS := $(ARC_ROOT)/initramfs
+ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build
+ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host
+ARC_VOLATILE := $(ARC_ROOT)/volatile
+ARC_BUILD_SUPPORT := $(ARC_ROOT)/build-support
+
+export ARC_SYSROOT
+export ARC_INITRAMFS
+export ARC_TOOLCHAIN_BUILD
+export ARC_TOOLCHAIN_HOST
+export ARC_VOLATILE
+export ARC_BUILD_SUPPORT
+
 OS_TRIPLET := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
-INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
-LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
-MAKEFLAGS += -j$(($(shell nproc) / 2))
-PREFIX := /usr/
+PREFIX := /usr
+
+export OS_TRIPLET
+export PREFIX
+
 PATH := $(ARC_SYSROOT)/$(PREFIX)/local/bin:$(PATH)
 CFLAGS=-O2 -pipe -fstack-clash-protection
 CXXFLAGS=$(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
@@ -52,25 +78,45 @@ LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
 ARC_SET_BUILD_COMPILER_ENV_FLAGS := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 ARC_SET_TARGET_COMPILER_ENV_FLAGS := CFLAGS_FOR_TARGET="$(CFLAGS)" CXXFLAGS_FOR_TARGET="$(CXXFLAGS)"
 
-export ARC_SYSROOT
-export ARC_TOOLCHAIN_BUILD
-export ARC_TOOLCHAIN_HOST
-export ARC_VOLATILE
-export OS_TRIPLET
-export ARC_ROOT
-export ARC_PRODUCT
-export PREFIX
 export CFLAGS
 export CXXFLAGS
 export LDFLAGS
 export ARC_SET_COMPILER_ENV_FLAGS
 export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 
+INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
+LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
+
+QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -serial mon:stdio \
+	     -enable-kvm -cpu qemu64 -smp 4  \
+	     -drive file=test_disk.img,if=none,id=NVME1 \
+	     -device nvme,drive=NVME1,serial=nvme-1
+
 .PHONY: all
 all:
+ifeq ($(BSP),)
+	echo "No bootstrapper specified"
+	exit 1
+endif
+
+ifeq ($(wildcard ../Kernel),)
+	git clone $(REPO_BASE_LINK)/Kernel ../Kernel --depth 1
+	cd ../Kernel && git submodule --init
+endif
+
+ifeq ($(wildcard ../Userspace),)
+	git clone $(REPO_BASE_LINK)/Userspace ../Userspace --depth 1
+	cd ../Userspace && git submodule --init
+endif
+
+ifeq ($(wildcard ../$(BSP)BSP),)
+	git clone $(REPO_BASE_LINK)/$(BSP)BSP ../$(BSP)BSP --depth 1
+	cd ../$(BSP)BSP && git submodule --init
+endif
+
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT)
-	mkdir -p $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/$(PREFIX)/lib
+	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE) \
+		 $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/$(PREFIX)/lib
 
 	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/bin
 	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/sbin
@@ -86,33 +132,22 @@ all:
 	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
-	mkdir -p $(ARC_ROOT)/volatile
-	$(MAKE) distro
-
-.PHONY: distro
-distro: userspace
-ifeq ($(BSP),)
-	echo "No bootstrapper specified"
-	exit 1
-endif
-
 # Do the big things
-	$(MAKE) -C ../Kernel all
-	$(MAKE) -C ../Userspace all
+	bear --output ../Kernel/compile_commands.json -- $(MAKE) -C ../Kernel all
+	bear --output ../Userspace/compile_commands.json -- $(MAKE) -C ../Userspace all
 
 # Construct the initramfs
-	cd $(ARC_INITRAMFS_CONSTANT) && find . | cpio -o > $(INITRAMFS_IMAGE)
+	cd $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
-	if [ ! -d "../$(BSP)BSP" ]; then \
-		git clone $(REPO_BASE_LINK)/$(BSP)BSP ../$(BSP)BSP; \
-		cd ../$(BSP)BSP && git submodule update --init --recursive; \
-	fi
-	$(MAKE) -C ../$(BSP)BSP all
+	bear --output ../$(BSP)BSP/compile_commands.json -- $(MAKE) -C ../$(BSP)BSP all
 
 .PHONY: clean
 clean:
-	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
+	$(MAKE) -C ../Kernel clean
+	$(MAKE) -C ../Userspace clean
+	$(MAKE) -C ../$(BSP)BSP clean
+	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
 	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
 
 .PHONY: prepare-rebuild
@@ -123,23 +158,3 @@ prepare-rebuild:
 .PHONY: run
 run: $(ARC_PRODUCT)
 	qemu-system-x86_64 $(QEMUFLAGS)
-
-# Bootstrappers
-# MB2
-.PHONY: mb2
-mb2:
-# /MB2
-
-.PHONY: kernel
-kernel:
-	if [ ! -d "../Kernel" ]; then \
-		git clone $(REPO_BASE_LINK)/Kernel ../Kernel; \
-		cd ../Kernel && git submodule update --init --recursive; \
-	fi
-
-.PHONY: userspace
-userspace: kernel
-	if [ ! -d "../Userspace" ]; then \
-		git clone $(REPO_BASE_LINK)/Userspace ../Userspace; \
-		cd ../Userspace && git submodule update --init --recursive; \
-	fi

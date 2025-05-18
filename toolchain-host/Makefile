@@ -1,4 +1,4 @@
-ARC_DESTDIR := $(dir $(ARC_SYSROOT))
+ARC_DESTDIR := $(ARC_SYSROOT)
 
 export ARC_DESTDIR
 
@@ -15,7 +15,8 @@ all:
 	$(MAKE) -C mlibc-libraries
 	$(MAKE) -C libgcc
 	$(MAKE) -C gcc
-
+# Circular dependency with libiconv and gettext
+# gettext will remake libiconv
 	$(MAKE) -C libiconv
 	$(MAKE) -C gettext
 

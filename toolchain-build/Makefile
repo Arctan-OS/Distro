@@ -1,4 +1,4 @@
-ARC_DESTDIR := $(dir $(ARC_SYSROOT))
+ARC_DESTDIR := $(ARC_SYSROOT)
 
 export ARC_DESTDIR
 
@@ -21,6 +21,4 @@ all:
 	$(MAKE) -C autoconf-2.69
 	$(MAKE) -C automake
 	$(MAKE) -C libtool
-
-#	$(MAKE) -C gnulib
 	$(MAKE) -C gcc
