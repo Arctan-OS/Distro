@@ -7,22 +7,24 @@ uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 ## Components
 * [Kernel](https://github.com/Arctan-OS/Kernel)
 * Bootstrapper
-  * [Multiboot2 (ARC_BSP=MB2)](https://github.com/Arctan-OS/MB2BSP)
-  * [Limine (ARC_BSP=LBP)](https://github.com/Arctan-OS/LBPBSP) (Work in Progress)
+  * [Multiboot2 (BSP=MB2)](https://github.com/Arctan-OS/MB2BSP)
+  * [Limine (BSP=LBP)](https://github.com/Arctan-OS/LBPBSP) (Work in Progress)
+* [Userspace](https://github.com/Arctan-OS/Userspace)
 
 ## Requirements
+* See the requirements for the bootstrapper you are building with.
+* Packages to build Binutils
+* Packages to build GCC
 * gcc
-* ld
+* binutils
 * xorriso
 * nasm
 * make
 * gzip
 * cpio
-* qemu
-* See the requirements for the bootstrapper you are building with.
-* Packages to build Binutils
-* Packages to build GCC
+* qemu (for `make run`)
 * curl
+* bear (to generate compile_commands.json)
 
 ## Build Instructions
 Please note that the kernel and desired bootstrapper will be cloned to the Distro's
@@ -32,22 +34,31 @@ within its own "Arctan" directory.
 The distrobution can be built with a command of the following form:
 
 ```shell
-$ make <bsp> all
+$ make BSP=<bsp> all
 ```
 
 Where `<bsp>` is replaced with the shortened version of the bootstrapper to use.
-For instance, if one were to build using the Multiboot2 bootstrapper, `<bsp>` would
-be substituted by `ARC_BSP=MB2`.
+For instance, if one were to build using the GRUB Multiboot2 bootstrapper, `<bsp>` would
+be substituted by `MB2`.
 
 This will build the host and build toolchains if needed. On each call, the kernel and
 bootstrapper directories will be cleaned in order to pull in any changes you have made.
 
-The resultant ISO file can be started in `qemu-system-x86_64` using the following
+Other fields are
+`SCHED=RR` - to specify the scheduler to be a round robin
+`DEBUG=yes` - to enable debug logs
+`COM=0x3F8` - to send all print messages through COM1 (see [other COM addresses](https://osdev.wiki/wiki/Serial_Ports#Port_Addresses))
+
+The resultant ISO file can be started using `qemu-system-x86_64` using the following
 command:
 
 ```shell
 $ make run
 ```
+
+### List of Scheduler Codes
+`MLFQ` - Multi-level Feedback Queue (DEFAULT)
+`RR` - Round Robin
 
 ## Directory Layout
 
@@ -70,7 +81,7 @@ is the one on which the program is run.
 The build-support subdirectory contains files which aid in building the final disk image. These
 may contain files used in the building of the build toolchain, host toolchain, kernel, and bootstrapper.
 
-### initramfs-constant
+### initramfs
 
 On each build, this directory is copied into sysroot, which is then made into a .cpio image. The original directory
 is kept, as it contains the toolchain to build the system, and the rest of the files on the system.
@@ -90,8 +101,9 @@ The system root for the host machine.
 
 ### volatile
 
-This contains the products of the kernel.
+This contains files and directories that are subject to change with builds. For instance kernel.elf, initramfs.cpio, and
+live_env.cpio.
 
 NOTE: It is the responsibility of the bootstrapper to construct the final product, defined by \$(ARC_PRODUCT),
-and to appropriately install the kernel executable, located at \$(ARC_ROOT)/volatile/kernel/kernel.elf, and initramfs,
-located at $(ARC_ROOT)/initramfs.cpio, into this final product.
+and to appropriately install the kernel executable, located at \$(ARC_ROOT)/volatile/kernel.elf, initramfs,
+located at \$(ARC_ROOT)/initramfs.cpio, and live environment, located at \$(ARC_ROOT)/live_env.cpio into this final product.

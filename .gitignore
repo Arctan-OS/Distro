@@ -4,12 +4,10 @@ volatile
 *.cpio
 memdump.bin
 
-initramfs
-
 *.tar.gz
 *.complete
 
-sysroot
+sysroot/
 
 **/build
 *-src
