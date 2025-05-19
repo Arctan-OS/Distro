@@ -1,23 +1,20 @@
-VERSION := 1.17
-NAME := libiconv-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/libiconv/$(TAR)
+ARC_VERSION := 1.17
+ARC_NAME := libiconv-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/libiconv/$(ARC_TAR)
 COMPLETE := build.complete
 
-$(COMPLETE): $(TAR)
+$(COMPLETE):
 	rm -rf build
 	mkdir build
 
-	cd build && $(AC_CFLAGS) ../libiconv-src/configure $(AC_FLAGS)
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
+
+	cd build && $(AC_CFLAGS) ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
 	touch $(COMPLETE)
 
-$(TAR):
-	rm -rf libiconv-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) libiconv-src
-	cd libiconv-src && patch -p1 < ../libiconv.patch

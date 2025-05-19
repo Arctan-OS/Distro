@@ -1,26 +1,22 @@
-VERSION := 2.43
-NAME := binutils-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/binutils/$(TAR)
+# Don't forget to update this in toolchain-host/gcc/binutils
+ARC_VERSION := 2.43
+ARC_NAME := binutils-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/binutils/$(ARC_TAR)
 
 COMPLETE := build.complete
 
-$(COMPLETE): $(TAR)
+$(COMPLETE):
 	rm -rf build
 	mkdir build
 
-	ARC_REGEN_DIR=binutils-src $(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
+	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 
-	cd build && ../binutils-src/configure $(AC_FLAGS)
+	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
 	touch $(COMPLETE)
-
-$(TAR):
-	rm -rf binutils-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) binutils-src
-	cd binutils-src && patch -p1 < ../binutils.patch
