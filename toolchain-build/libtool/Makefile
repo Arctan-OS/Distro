@@ -1,15 +1,17 @@
-VERSION := 2.4.7
-NAME := libtool-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://mirror.csclub.uwaterloo.ca/gnu/libtool/$(TAR)
+ARC_VERSION := 2.4.7
+ARC_NAME := libtool-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://mirror.csclub.uwaterloo.ca/gnu/libtool/$(ARC_TAR)
 
-COMPLETE := build.complete
+COMPLETE := $(shell realpath build.complete)
 
-$(COMPLETE): $(TAR)
-	rm -rf build
-	mkdir build
+$(COMPLETE):
+	mkdir -p build
 
-	cd build && ../libtool-src/configure $(AC_FLAGS)
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
+
+	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
@@ -18,10 +20,3 @@ $(COMPLETE): $(TAR)
 	cp -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_HOST_PREFIX)/share/libtool
 
 	touch $(COMPLETE)
-
-$(TAR):
-	rm -rf libtool-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) libtool-src
-	cd libtool-src && patch -p1 < ../libtool.patch
