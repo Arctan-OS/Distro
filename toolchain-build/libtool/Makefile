@@ -9,12 +9,13 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../libtool-src/configure --prefix=$(ARC_SYSROOT)$(PREFIX)
+	cd build && ../libtool-src/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
-	cp -pv $(ARC_SYSROOT)/usr/local/share/autoconf/build-aux/config.sub $(ARC_DESTDIR)$(PREFIX)/share/libtool
+	mkdir -p $(ARC_HOST_PREFIX)/share/libtool
+	cp -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_HOST_PREFIX)/share/libtool
 
 	touch $(COMPLETE)
 

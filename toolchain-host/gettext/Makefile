@@ -11,7 +11,7 @@ $(COMPLETE): $(TAR)
 	cd build && ../gettext-src/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
-	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install
+	$(MAKE) -C build install
 
 	rm ../libiconv/build.complete
 	$(MAKE) -C ../libiconv

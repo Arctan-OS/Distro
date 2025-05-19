@@ -1,15 +1,7 @@
-ARC_DESTDIR := $(ARC_SYSROOT)
-
-export ARC_DESTDIR
-
-PREFIX := $(PREFIX)/local
-
-export PREFIX
-
 AC_FLAGS := \
-		--with-sysroot=$(ARC_SYSROOT) \
 		--target=$(OS_TRIPLET) \
-		--prefix=$(PREFIX) \
+		--prefix=$(ARC_BUILD_PREFIX) \
+		--with-sysroot=$(ARC_SYSROOT) \
 		--disable-nls \
 		--disable-werror
 
