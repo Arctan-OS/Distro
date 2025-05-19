@@ -5,11 +5,18 @@ This is a repository which contains everything required to build an operating sy
 uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 
 ## Components
-* [Kernel](https://github.com/Arctan-OS/Kernel)
-* Bootstrapper
-  * [Multiboot2 (BSP=MB2)](https://github.com/Arctan-OS/MB2BSP)
-  * [Limine (BSP=LBP)](https://github.com/Arctan-OS/LBPBSP) (Work in Progress)
-* [Userspace](https://github.com/Arctan-OS/Userspace)
+```mermaid
+flowchart TD
+        A(["Kernel"]) --> D
+        B(["MB2BSP"]) --> D
+        C(["Userspace"]) --> D
+        D(["Distro"])
+        click A "https://github.com/Arctan-OS/Kernel" _blank
+        click B "https://github.com/Arctan-OS/MB2BSP" _blank
+        click C "https://github.com/Arctan-OS/Userspace" _blank
+```
+
+Note: `MB2BSP` can be replaced by any bootstrapper.
 
 ## Requirements
 * See the requirements for the bootstrapper you are building with.
@@ -56,9 +63,13 @@ command:
 $ make run
 ```
 
+### List of Bootstrapper Codes
+* `MB2` - Multiboot2 Bootstrapper
+* `LBP` - Limine Bootstrapper
+
 ### List of Scheduler Codes
-`MLFQ` - Multi-level Feedback Queue (DEFAULT)
-`RR` - Round Robin
+* `MLFQ` - Multi-level Feedback Queue (DEFAULT)
+* `RR` - Round Robin
 
 ## Directory Layout
 

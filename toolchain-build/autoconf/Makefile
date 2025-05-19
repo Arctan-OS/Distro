@@ -9,7 +9,7 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../autoconf-src/configure --prefix=$(ARC_SYSROOT)/$(PREFIX)
+	cd build && ../autoconf-src/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install

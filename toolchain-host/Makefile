@@ -5,8 +5,9 @@ export ARC_DESTDIR
 AC_FLAGS := \
 		--target=$(OS_TRIPLET) \
 		--host=$(OS_TRIPLET) \
-		--prefix=$(PREFIX) \
-		--with-sysroot=$(ARC_SYSROOT) \
+		--prefix=$(ARC_HOST_PREFIX) \
+		--with-sysroot=/ \
+		--with-build-sysroot=$(ARC_SYSROOT) \
 		--disable-werror
 
 export AC_FLAGS

@@ -1,9 +1,25 @@
+# Provide sysroot ACLOCAL include directory if present
 ACLOCAL_INC=""
-if [ -d $ARC_SYSROOT/usr/local/share ]; then
-   ACLOCAL_INCLUDE="-I${ARC_SYSROOT}/usr/local/share"
+if [ -d $ARC_BUILD_PREFIX/share ]; then
+   ACLOCAL_INCLUDE="-I${ARC_BUILD_PREFIX}/share"
 fi
 
-for f in $(find $(pwd)/$ARC_RECONF_DIR -name configure.ac -or -name configure.in -type f);
+# Error if the source directory that is desired to
+# be rescursively reconfigured does not exist
+if [ ! -d $(pwd)/$ARC_RECONF_DIR ]; then
+    echo "Directory $(pwd)/$ARC_RECONF_DIR does not exist!"
+    exit 1
+fi
+
+# Reconfigure the deepest directories first (that contain a file or files
+# named configure.ac configure.in or configure). Once reconfigured, add these
+# directories to a list of directories that have been reconfigured
+for d in $(find $(pwd)/$ARC_RECONF_DIR -depth -type d);
 do
-    cd "$(dirname "$f")" && autoreconf -fvi "$@" $ACLOCAL_INC
+    conf=$(find $d -name configure.ac -or -name configure.in -or -name configure -type f)
+
+    if [ -z $(grep -zoP "$d\n" $ARC_VOLATILE/reconfigure.list) ] && [ -n "$conf" ]; then
+        cd $d && autoreconf -fvi "$@" $ACLOCAL_INC
+        echo $d >> $ARC_VOLATILE/reconfigure.list
+    fi
 done

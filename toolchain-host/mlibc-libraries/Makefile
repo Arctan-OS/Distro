@@ -1,4 +1,4 @@
-MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/meson.cross --prefix=/usr \
+MESON_FLAGS := --reconfigure --cross-file $(ARC_ROOT)/build-support/meson.cross --prefix=$(ARC_HOST_PREFIX) \
 		-Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
 		--buildtype=debugoptimized -Ddefault_library=both -Ddisable_libgcc_dependency=true \
 		build
@@ -18,6 +18,6 @@ $(COMPLETE):
 
 	cd $(MLIBC_ROOT) && $(ARC_SET_COMPILER_ENV_FLAGS) LDFLAGS="-Wl,$(ARC_TOOLCHAIN_HOST)/mlibc-libraries/freestanding-libgcc-libraries/libgcc-bin/libgcc-x86_64.a" \
 			    meson setup $(MESON_FLAGS) -Dmlibc_no_headers=true
-	DESTDIR=$(ARC_SYSROOT) meson install -C $(MLIBC_ROOT)/build
+	meson install -C $(MLIBC_ROOT)/build
 
 	touch $(COMPLETE)

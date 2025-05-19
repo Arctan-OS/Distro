@@ -66,12 +66,14 @@ export ARC_VOLATILE
 export ARC_BUILD_SUPPORT
 
 OS_TRIPLET := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
-PREFIX := /usr
+ARC_BUILD_PREFIX := $(ARC_SYSROOT)/usr/cross
+ARC_HOST_PREFIX := $(ARC_SYSROOT)/usr
 
 export OS_TRIPLET
-export PREFIX
+export ARC_BUILD_PREFIX
+export ARC_HOST_PREFIX
 
-PATH := $(ARC_SYSROOT)/$(PREFIX)/local/bin:$(PATH)
+PATH := $(ARC_BUILD_PREFIX)/bin:$(PATH)
 CFLAGS=-O2 -pipe -fstack-clash-protection
 CXXFLAGS=$(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
 LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
@@ -116,13 +118,16 @@ endif
 
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
 	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE) \
-		 $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/$(PREFIX)/lib
+		 $(ARC_HOST_PREFIX)/bin \
+		 $(ARC_HOST_PREFIX)/include \
+		 $(ARC_HOST_PREFIX)/lib \
+		 $(ARC_HOST_PREFIX)/share
 
-	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/bin
-	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/bin $(ARC_SYSROOT)/sbin
-	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/include $(ARC_SYSROOT)/include
-	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/lib $(ARC_SYSROOT)/lib
-	ln -sfT $(ARC_SYSROOT)/$(PREFIX)/lib $(ARC_SYSROOT)/lib64
+	ln -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/bin
+	ln -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/sbin
+	ln -sfT $(ARC_HOST_PREFIX)/include $(ARC_SYSROOT)/include
+	ln -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib
+	ln -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
 
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)

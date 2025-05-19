@@ -12,7 +12,7 @@ $(COMPLETE): $(TAR)
 	cd build && ../mpc-src/configure $(AC_FLAGS)
 
 	make -C build
-	DESTDIR=$(ARC_DESTDIR) make -C build install
+	make -C build install
 
 	touch $(COMPLETE)
 

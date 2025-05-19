@@ -12,7 +12,7 @@ COMPLETE := build.complete
 
 $(COMPLETE):
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)/gcc/build all-target-libstdc++-v3
-	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C $(ARC_TOOLCHAIN_BUILD)/gcc/build install-target-libstdc++-v3
+	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)/gcc/build install-target-libstdc++-v3
 
 	$(MAKE) -C gmp
 	$(MAKE) -C mpfr
@@ -26,6 +26,6 @@ $(COMPLETE):
 	cd build && $(AC_CFLAGS) $(ARC_TOOLCHAIN_BUILD)/gcc/gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
-	DESTDIR=$(ARC_DESTDIR) $(MAKE) -C build install-gcc
+	$(MAKE) -C build install-gcc
 
 	touch $(COMPLETE)

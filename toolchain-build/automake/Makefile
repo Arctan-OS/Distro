@@ -9,12 +9,14 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../automake-src/configure --prefix=$(ARC_SYSROOT)$(PREFIX)
+	cd build && ../automake-src/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
-
-	cp -pv $(ARC_SYSROOT)/usr/local/share/autoconf/build-aux/config.sub $(ARC_DESTDIR)$(PREFIX)/share/automake-1.16
+	
+	mkdir -p $(ARC_DESTDIR)$(ARC_HOST_PREFIX)/share/automake-1.16
+	cp -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_HOST_PREFIX)/share/automake-1.16
+	cp -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_BUILD_PREFIX)/share/automake-1.16
 
 	touch $(COMPLETE)
 
