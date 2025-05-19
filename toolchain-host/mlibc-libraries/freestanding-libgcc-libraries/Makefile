@@ -4,7 +4,7 @@ ARC_NAME := libgcc-binaries-$(ARC_VERSION)
 ARC_TAR := $(ARC_NAME).tar.gz
 ARC_MIRROR := $(ARC_REPO)/archive/$(ARC_VERSION).tar.gz
 
-$(TAR):
+$(ARC_TAR):
 	rm -rf libgcc-bin
 	curl -o $(ARC_TAR) -L $(ARC_MIRROR)
 	tar -xf $(ARC_TAR)

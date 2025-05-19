@@ -1,7 +1,8 @@
-VERSION := 14.2.0
-NAME := gcc-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/gcc/$(NAME)/$(TAR)
+ARC_VERSION := 14.2.0
+ARC_NAME := gcc-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/gcc/$(ARC_NAME)/$(ARC_TAR)
 
 AC_EXTRA_FLAGS := \
 		--enable-languages=c,c++,lto \
@@ -10,29 +11,23 @@ AC_EXTRA_FLAGS := \
 		--disable-multilib \
 		--enable-initfini-array
 
-COMPLETE := build.complete
+COMPLETE := $(shell realpath build.complete)
 
-$(COMPLETE): $(TAR)
+$(COMPLETE):
 	$(MAKE) -C binutils
 
-	rm -rf build
-	mkdir build
+	mkdir -p build
 
-	cp -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} gcc-src/libgcc
-	cp -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} gcc-src/libiberty
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
 
-	ARC_RECONF_DIR=gcc-src $(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh -I"$(realpath ./gcc-src/config)"
+	cp -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libgcc
+	cp -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libiberty
 
-	cd build && $(ARC_SET_COMPILER_ENV_FLAGS) $(ARC_SET_TARGET_COMPILER_ENV_FLAGS) ../gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh -I"$$(realpath $(ARC_SOURCE_DIR)/config)"
+
+	cd build && $(ARC_SET_COMPILER_ENV_FLAGS) $(ARC_SET_TARGET_COMPILER_ENV_FLAGS) ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
 	$(MAKE) -C build install-gcc
 
 	touch $(COMPLETE)
-
-$(TAR):
-	rm -rf gcc-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) gcc-src
-	cd gcc-src && patch -p1 < ../gcc.patch

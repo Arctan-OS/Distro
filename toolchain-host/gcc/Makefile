@@ -1,3 +1,5 @@
+include $(ARC_TOOLCHAIN_BUILD)/gcc/Makefile
+
 AC_EXTRA_FLAGS := \
 		--enable-languages=c,c++,lto \
 		--enable-shared \
@@ -8,7 +10,7 @@ AC_EXTRA_FLAGS := \
 
 export AC_EXTRA_FLAGS
 
-COMPLETE := build.complete
+COMPLETE := $(shell realpath build.complete)
 
 $(COMPLETE):
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)/gcc/build all-target-libstdc++-v3
@@ -20,10 +22,9 @@ $(COMPLETE):
 
 	$(MAKE) -C binutils
 
-	rm -rf build
-	mkdir build
+	mkdir -p build
 
-	cd build && $(AC_CFLAGS) $(ARC_TOOLCHAIN_BUILD)/gcc/gcc-src/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	cd build && $(AC_CFLAGS) $(ARC_TOOLCHAIN_BUILD)/gcc/$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
 	$(MAKE) -C build install-gcc

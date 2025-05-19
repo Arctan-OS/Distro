@@ -20,6 +20,6 @@ do
 
     if [ -z $(grep -zoP "$d\n" $ARC_VOLATILE/reconfigure.list) ] && [ -n "$conf" ]; then
         cd $d && autoreconf -fvi "$@" $ACLOCAL_INC
-        echo $d >> $ARC_VOLATILE/reconfigure.list
+        echo "Reconfigured ($?) $d" >> $ARC_VOLATILE/reconfigure.list
     fi
 done
