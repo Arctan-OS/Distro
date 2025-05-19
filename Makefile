@@ -13,7 +13,6 @@ SCHED ?= rr
 COM ?=
 DEBUG ?=
 CORES ?= $(shell echo $$(($(shell nproc) / 2)))
-
 MAKEFLAGS += -j$(CORES)
 
 ARC_OPT_ARCH := x86_64
@@ -94,6 +93,15 @@ QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -serial mon:stdi
 	     -drive file=test_disk.img,if=none,id=NVME1 \
 	     -device nvme,drive=NVME1,serial=nvme-1
 
+# Set these exports for the many Makefiles in $(ARC_TOOLCHAIN_BUILD)
+# and $(ARC_TOOLCHAIN_HOST) such that they can interface with some of
+# the build support utilities (like $(ARC_BUILD_SUPPORT)/tar_helper.sh)
+export ARC_VERSION
+export ARC_NAME
+export ARC_SOURCE_DIR
+export ARC_TAR
+export ARC_MIRROR
+
 .PHONY: all
 all:
 ifeq ($(BSP),)
@@ -148,17 +156,18 @@ $(ARC_PRODUCT):
 	bear --output ../$(BSP)BSP/compile_commands.json -- $(MAKE) -C ../$(BSP)BSP all
 
 .PHONY: clean
-clean:
+clean: prepare-rebuild
 	$(MAKE) -C ../Kernel clean
 	$(MAKE) -C ../Userspace clean
 	$(MAKE) -C ../$(BSP)BSP clean
-	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
-	find . -type f -name "*.tar.gz" -delete -or -name "*.complete" -delete
+	find . -type f -name "*.tar.gz" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
-	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
+	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
 	find . -type f -name "build.complete" -delete
+	find $(ARC_TOOLCHAIN_HOST)/  -depth -type d -name "*-src" -exec rm -rf "{}" \; -or -name "build" -type d -exec rm -rf "{}" \;
+	find $(ARC_TOOLCHAIN_BUILD)/ -depth -type d -name "*-src" -exec rm -rf "{}" \; -or -name "build" -type d -exec rm -rf "{}" \;
 
 .PHONY: run
 run: $(ARC_PRODUCT)

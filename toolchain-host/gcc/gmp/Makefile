@@ -1,7 +1,8 @@
-VERSION := 6.3.0
-NAME := gmp-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/gmp/$(TAR)
+ARC_VERSION := 6.3.0
+ARC_NAME := gmp-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/gmp/$(ARC_TAR)
 
 COMPLETE := build.complete
 
@@ -9,16 +10,12 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../gmp-src/configure $(AC_FLAGS) --enable-shared
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
 
+	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) --enable-shared
+	
 	make -C build
 	make -C build install
 
 	touch $(COMPLETE)
 
-$(TAR):
-	rm -rf gmp-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) gmp-src
-	cd gmp-src && patch -p1 < ../gmp.patch

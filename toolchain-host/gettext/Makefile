@@ -1,14 +1,17 @@
-VERSION := 0.22.5
-NAME := gettext-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/gettext/$(TAR)
+ARC_VERSION := 0.22.5
+ARC_NAME := gettext-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/gettext/$(ARC_TAR)
 COMPLETE := build.complete
 
-$(COMPLETE): $(TAR)
+$(COMPLETE):
 	rm -rf build
 	mkdir build
 
-	cd build && ../gettext-src/configure $(AC_FLAGS)
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
+
+	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
@@ -17,10 +20,3 @@ $(COMPLETE): $(TAR)
 	$(MAKE) -C ../libiconv
 
 	touch $(COMPLETE)
-
-$(TAR):
-	rm -rf gettext-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) gettext-src
-	cd gettext-src && patch -p1 < ../gettext.patch

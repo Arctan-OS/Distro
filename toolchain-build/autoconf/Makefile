@@ -1,7 +1,8 @@
-VERSION := 2.72
-NAME := autoconf-$(VERSION)
-TAR := $(NAME).tar.gz
-MIRROR := https://ftp.gnu.org/gnu/autoconf/$(TAR)
+ARC_VERSION := 2.72
+ARC_NAME := autoconf-$(ARC_VERSION)
+ARC_SOURCE_DIR := $(ARC_NAME)-src
+ARC_TAR := $(ARC_NAME).tar.gz
+ARC_MIRROR := https://ftp.gnu.org/gnu/autoconf/$(ARC_TAR)
 
 COMPLETE := build.complete
 
@@ -9,16 +10,11 @@ $(COMPLETE): $(TAR)
 	rm -rf build
 	mkdir build
 
-	cd build && ../autoconf-src/configure $(AC_FLAGS)
+	$(ARC_BUILD_SUPPORT)/tar_helper.sh
+
+	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
 	touch $(COMPLETE)
-
-$(TAR):
-	rm -rf autoconf-src
-	curl -o $(TAR) $(MIRROR)
-	tar -xf $(TAR)
-	mv $(NAME) autoconf-src
-	cd autoconf-src && patch -p1 < ../autoconf.patch
