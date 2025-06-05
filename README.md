@@ -8,11 +8,11 @@ uses Arctan-OS/Kernel and an Arctan compatible bootstrapper.
 ```mermaid
 flowchart TD
         A(["Kernel"]) --> D
-        B(["MB2BSP"]) --> D
+        B(["BSP-GRUB"]) --> D
         C(["Userspace"]) --> D
         D(["Distro"])
         click A "https://github.com/Arctan-OS/Kernel" _blank
-        click B "https://github.com/Arctan-OS/MB2BSP" _blank
+        click B "https://github.com/Arctan-OS/BSP-GRUB" _blank
         click C "https://github.com/Arctan-OS/Userspace" _blank
 ```
 
@@ -46,7 +46,7 @@ $ make BSP=<bsp> all
 
 Where `<bsp>` is replaced with the shortened version of the bootstrapper to use.
 For instance, if one were to build using the GRUB Multiboot2 bootstrapper, `<bsp>` would
-be substituted by `MB2`.
+be substituted by `GRUB`.
 
 This will build the host and build toolchains if needed. On each call, the kernel and
 bootstrapper directories will be cleaned in order to pull in any changes you have made.
@@ -64,7 +64,7 @@ $ make run
 ```
 
 ### List of Bootstrapper Codes
-* `MB2` - Multiboot2 Bootstrapper
+* `GRUB` - Multiboot2 Bootstrapper
 * `LBP` - Limine Bootstrapper
 
 ### List of Scheduler Codes
