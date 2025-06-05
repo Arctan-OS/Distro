@@ -6,7 +6,7 @@ ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 export ARC_ROOT
 export ARC_PRODUCT
 
-BSP ?= MB2
+BSP ?= GRUB
 ARCH ?= x86-64
 LIBC ?= mlibc
 SCHED ?= rr
@@ -56,6 +56,7 @@ ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build
 ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host
 ARC_VOLATILE := $(ARC_ROOT)/volatile
 ARC_BUILD_SUPPORT := $(ARC_ROOT)/build-support
+ARC_INCLUDE_DIRS := -I$(ARC_ROOT)/include -I$(ARC_SYSROOT)/include
 
 export ARC_SYSROOT
 export ARC_INITRAMFS
@@ -63,6 +64,7 @@ export ARC_TOOLCHAIN_BUILD
 export ARC_TOOLCHAIN_HOST
 export ARC_VOLATILE
 export ARC_BUILD_SUPPORT
+export ARC_INCLUDE_DIRS
 
 OS_TRIPLET := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
 ARC_BUILD_PREFIX := $(ARC_SYSROOT)/usr/cross
@@ -88,10 +90,12 @@ export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
 
+
 QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -serial mon:stdio \
 	     -enable-kvm -cpu qemu64 -smp 4  \
 	     -drive file=test_disk.img,if=none,id=NVME1 \
-	     -device nvme,drive=NVME1,serial=nvme-1
+	     -device nvme,drive=NVME1,serial=nvme-1 \
+	     -d int,cpu_reset
 
 # Set these exports for the many Makefiles in $(ARC_TOOLCHAIN_BUILD)
 # and $(ARC_TOOLCHAIN_HOST) such that they can interface with some of
@@ -119,9 +123,9 @@ ifeq ($(wildcard ../Userspace),)
 	cd ../Userspace && git submodule update --init
 endif
 
-ifeq ($(wildcard ../$(BSP)BSP),)
-	git clone $(REPO_BASE_LINK)/$(BSP)BSP ../$(BSP)BSP --depth 1
-	cd ../$(BSP)BSP && git submodule update --init
+ifeq ($(wildcard ../BSP-$(BSP)),)
+	git clone $(REPO_BASE_LINK)/BSP-$(BSP) ../BSP-$(BSP) --depth 1
+	cd ../BSP-$(BSP) && git submodule update --init
 endif
 
 	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
@@ -142,7 +146,7 @@ endif
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
 	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
-	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld $(MAKE) $(ARC_PRODUCT)
+	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v" $(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
 # Do the big things
@@ -153,13 +157,13 @@ $(ARC_PRODUCT):
 	cd $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
 	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
-	bear --output ../$(BSP)BSP/compile_commands.json -- $(MAKE) -C ../$(BSP)BSP all
+	bear --output ../BSP-$(BSP)/compile_commands.json -- $(MAKE) -C ../BSP-$(BSP) all
 
 .PHONY: clean
 clean: prepare-rebuild
 	$(MAKE) -C ../Kernel clean
 	$(MAKE) -C ../Userspace clean
-	$(MAKE) -C ../$(BSP)BSP clean
+	$(MAKE) -C ../BSP-$(BSP) clean
 	find . -type f -name "*.tar.gz" -delete
 
 .PHONY: prepare-rebuild
