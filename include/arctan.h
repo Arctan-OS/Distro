@@ -25,6 +25,11 @@ enum {
 	ARC_MEMORY_BOOTSTRAP_ALLOC,
 };
 
+enum {
+	ARC_PAGER_FLAG_NO_EXEC = 0,
+	ARC_PAGER_FLAG_1_GIB,
+};
+
 struct ARC_KernelMeta {
 	/// Pointer to the base of the kernel module.
 	uint64_t kernel_elf;
@@ -47,6 +52,9 @@ struct ARC_KernelMeta {
 	} arc_mmap;
 	uint64_t rsdp;
 	uint64_t paging_features;
+	// Bit | Description (x86-64)
+	// 0   | NX bit is supported
+	// 1   | 1 GiB pages are supported
 }__attribute__((packed));
 
 struct ARC_BootMeta {

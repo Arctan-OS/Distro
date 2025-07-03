@@ -90,7 +90,6 @@ export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
 
-
 QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -serial mon:stdio \
 	     -enable-kvm -cpu qemu64 -smp 4  \
 	     -drive file=test_disk.img,if=none,id=NVME1 \
