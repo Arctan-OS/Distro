@@ -1,11 +1,11 @@
 diff --git a/meson.build b/meson.build
-index bb8928f3..a0aad3aa 100644
+index a1e526bc..32063019 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -256,6 +256,11 @@ elif host_machine.system() == 'dripos'
- 	rtld_include_dirs += include_directories('sysdeps/dripos/include')
- 	libc_include_dirs += include_directories('sysdeps/dripos/include')
- 	subdir('sysdeps/dripos')
+@@ -272,6 +272,11 @@ elif host_machine.system() == 'nyaux'
+ 	rtld_include_dirs += include_directories('sysdeps/nyaux/include')
+ 	libc_include_dirs += include_directories('sysdeps/nyaux/include')
+ 	subdir('sysdeps/nyaux')
 +elif host_machine.system() == 'arctan'
 +	disable_linux_option = true
 +	rtld_include_dirs += include_directories('sysdeps/arctan/include')
@@ -62,39 +62,21 @@ index 00000000..0187e50f
 +
 diff --git a/sysdeps/arctan/generic/entry.cpp b/sysdeps/arctan/generic/entry.cpp
 new file mode 100644
-index 00000000..47d24156
+index 00000000..b086c984
 --- /dev/null
 +++ b/sysdeps/arctan/generic/entry.cpp
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,17 @@
 +
 +#include <stdint.h>
 +#include <stdlib.h>
 +#include <bits/ensure.h>
 +#include <mlibc/elf/startup.h>
 +
-+// defined by the POSIX library
-+void __mlibc_initLocale();
-+
 +extern "C" uintptr_t *__dlapi_entrystack();
 +extern "C" void __dlapi_enter(uintptr_t *);
 +
 +extern char **environ;
 +static mlibc::exec_stack_data __mlibc_stack_data;
-+
-+struct LibraryGuard {
-+	LibraryGuard();
-+};
-+
-+static LibraryGuard guard;
-+
-+LibraryGuard::LibraryGuard() {
-+	__mlibc_initLocale();
-+
-+	// Parse the exec() stack.
-+	mlibc::parse_exec_stack(__dlapi_entrystack(), &__mlibc_stack_data);
-+	mlibc::set_startup_data(__mlibc_stack_data.argc, __mlibc_stack_data.argv,
-+			__mlibc_stack_data.envp);
-+}
 +
 +extern "C" void __mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[])) {
 +	__dlapi_enter(entry_stack);
@@ -347,6 +329,14 @@ index 00000000..595106b6
 @@ -0,0 +1 @@
 +../../../../abis/linux/ioctls.h
 \ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/ipc.h b/sysdeps/arctan/include/abi-bits/ipc.h
+new file mode 120000
+index 00000000..2c7ffc4c
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/ipc.h
+@@ -0,0 +1 @@
++../../../../abis/linux/ipc.h
+\ No newline at end of file
 diff --git a/sysdeps/arctan/include/abi-bits/limits.h b/sysdeps/arctan/include/abi-bits/limits.h
 new file mode 120000
 index 00000000..6c88db2e
@@ -435,6 +425,14 @@ index 00000000..88d74025
 @@ -0,0 +1 @@
 +../../../../abis/linux/resource.h
 \ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/rlim_t.h b/sysdeps/arctan/include/abi-bits/rlim_t.h
+new file mode 120000
+index 00000000..e92eb5fb
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/rlim_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/rlim_t.h
+\ No newline at end of file
 diff --git a/sysdeps/arctan/include/abi-bits/seek-whence.h b/sysdeps/arctan/include/abi-bits/seek-whence.h
 new file mode 120000
 index 00000000..df7bccf0
@@ -451,6 +449,14 @@ index 00000000..067d8c4f
 @@ -0,0 +1 @@
 +../../../../abis/linux/shm.h
 \ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/sigevent.h b/sysdeps/arctan/include/abi-bits/sigevent.h
+new file mode 120000
+index 00000000..83d069b5
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/sigevent.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sigevent.h
+\ No newline at end of file
 diff --git a/sysdeps/arctan/include/abi-bits/signal.h b/sysdeps/arctan/include/abi-bits/signal.h
 new file mode 120000
 index 00000000..4dcb0b7c
@@ -458,6 +464,14 @@ index 00000000..4dcb0b7c
 +++ b/sysdeps/arctan/include/abi-bits/signal.h
 @@ -0,0 +1 @@
 +../../../../abis/linux/signal.h
+\ No newline at end of file
+diff --git a/sysdeps/arctan/include/abi-bits/sigval.h b/sysdeps/arctan/include/abi-bits/sigval.h
+new file mode 120000
+index 00000000..ccd43a55
+--- /dev/null
++++ b/sysdeps/arctan/include/abi-bits/sigval.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sigval.h
 \ No newline at end of file
 diff --git a/sysdeps/arctan/include/abi-bits/socket.h b/sysdeps/arctan/include/abi-bits/socket.h
 new file mode 120000
@@ -581,10 +595,17 @@ index 00000000..66412d70
 \ No newline at end of file
 diff --git a/sysdeps/arctan/meson.build b/sysdeps/arctan/meson.build
 new file mode 100644
-index 00000000..e9dece51
+index 00000000..73443ece
 --- /dev/null
 +++ b/sysdeps/arctan/meson.build
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,101 @@
++sysdep_supported_options = {
++	'posix': true,
++	'linux': false,
++	'glibc': true,
++	'bsd': true,
++}
++
 +rtld_sources += files(
 +	'generic/generic.cpp'
 +)
@@ -641,6 +662,10 @@ index 00000000..e9dece51
 +                'include/abi-bits/statvfs.h',
 +                'include/abi-bits/socklen_t.h',
 +                'include/abi-bits/reboot.h',
++                'include/abi-bits/ipc.h',
++                'include/abi-bits/rlim_t.h',
++                'include/abi-bits/sigevent.h',
++                'include/abi-bits/sigval.h',
 +		subdir: 'abi-bits',
 +		follow_symlinks: true
 +	)
