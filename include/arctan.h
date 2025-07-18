@@ -4,11 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <config.h>
-
-#define ARC_PHYS_TO_HHDM(physical) ((uint64_t)(physical) + (uint64_t)ARC_HHDM_VADDR)
-#define ARC_HHDM_TO_PHYS(hhdm) ((uint64_t)(hhdm) - (uint64_t)ARC_HHDM_VADDR)
-
 enum {
 	ARC_BOOTPROC_ARCTAN = 1,
 	ARC_BOOTPROC_MB2,
@@ -78,5 +73,21 @@ struct ARC_MMap {
 	uint64_t len;
 	int type;
 }__attribute__((packed));
+
+struct ARC_PMMBiasConfigElement {
+	size_t min_blocks;                    // The minimum number of 2^exp blocks that need
+					      // to be present in a region for it to initialized
+					      // as a pfreelist of 2^exp size blocks.
+	uint32_t exp;                         // The exponent that this bias applies for.
+	uint32_t min_buddy_exp;               // The exponent of the power of two that represents
+					      // the smallest object size that a buddy allocator may
+					      // allocate in pfreelist block of 2^exp bytes.
+	struct {
+		uint32_t numerator;
+		uint32_t denominator;
+	} ratio;                              // The fraction that represents how much memory from a
+					      // region should be initialized into the pfreelist granted
+					      // at least min_blocks can be initialized.
+};
 
 #endif
