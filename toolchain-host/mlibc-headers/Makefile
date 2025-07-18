@@ -1,13 +1,11 @@
-# Don't forget to update this in mlibc-libraries
 ARC_REPO := https://github.com/managarm/mlibc
-ARC_VERSION := 0e63cc9b3d49f678bf330ee9d71d2eee6c1716e1
+ARC_VERSION := fae50a5e9ac246e3fc03bcc26090db6ae43b5b3f
 ARC_NAME := mlibc-$(ARC_VERSION)
 ARC_SOURCE_DIR := $(ARC_NAME)-src
 ARC_TAR := $(ARC_NAME).tar.gz
 ARC_MIRROR := $(ARC_REPO)/archive/$(ARC_VERSION).tar.gz
 
 MESON_FLAGS := --reconfigure --cross-file $(ARC_BUILD_SUPPORT)/meson.cross --prefix=$(ARC_HOST_PREFIX) \
-		-Ddisable_crypt_option=true -Ddisable_iconv_option=true -Ddisable_intl_option=true \
 		--buildtype=debugoptimized -Ddefault_library=both \
 		build
 
