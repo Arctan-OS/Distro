@@ -1,9 +1,9 @@
 #ifndef ARC_CONFIG_H
 #define ARC_CONFIG_H
 
-// #define ARC_PMM_BIAS_ARRAY 3,2,1,0
-
-#define ARC_HHDM_VADDR 0xFFFFC00000000000
+#define ARC_HHDM_VADDR (uint64_t)0xFFFFC00000000000
+#define ARC_PHYS_TO_HHDM(physical) ((uint64_t)(physical) + (uint64_t)ARC_HHDM_VADDR)
+#define ARC_HHDM_TO_PHYS(hhdm) ((uint64_t)(hhdm) - (uint64_t)ARC_HHDM_VADDR)
 
 // The number of processor descriptors to statically allocate
 // TODO: Get rid of this
@@ -14,11 +14,7 @@
 // The number of ticks that constitute a single timeslice for
 // the scheduler
 #define ARC_TICKS_PER_TIMESLICE 1000
-// Used in the calculation for the total number of pages the
-// physical buddy allocator should use 
-// (buddy pages = total pages * ARC_PMM_BUDDY_RATIO)
-#define ARC_PMM_BUDDY_RATIO 1/2
-// If this is set to 1 them the first 0x10000 bytes of memory 
+// If this is set to 1 them the first 0x10000 bytes of memory
 // is reserved for legacy DMA (i.e. a floppy controller). If it 
 // set to 0, then the memory will be used as part of general
 // allocation
