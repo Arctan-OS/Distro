@@ -6,6 +6,40 @@ ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 export ARC_ROOT
 export ARC_PRODUCT
 
+BEAR ?= bear
+CD ?= cd
+CP ?= cp
+CURL ?= curl
+ECHO ?= echo
+EXIT ?= exit
+FIND ?= find
+GIT ?= git
+LN ?= ln
+MESON ?= meson
+MKDIR ?= mkdir
+MV ?= mv
+QEMU ?= qemu-system-x86_64
+RM ?= rm
+TAR ?= tar
+TOUCH ?= touch
+
+export BEAR
+export CD
+export CP
+export CURL
+export ECHO
+export EXIT
+export FIND
+export GIT
+export LN
+export MESON
+export MKDIR
+export MV
+export QEMU
+export RM
+export TAR
+export TOUCH
+
 BSP ?= GRUB
 ARCH ?= x86-64
 LIBC ?= mlibc
@@ -90,8 +124,8 @@ export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
 
-QEMUFLAGS := -M q35,smm=off -m 4G -boot d -cdrom $(ARC_PRODUCT) -serial mon:stdio \
-	     -enable-kvm -cpu qemu64 -smp 4  \
+QEMUFLAGS := -M q35,smm=off -m 8G -boot d -cdrom $(ARC_PRODUCT) -serial stdio \
+	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
 	     -drive file=test_disk.img,if=none,id=NVME1 \
 	     -device nvme,drive=NVME1,serial=nvme-1 \
 	     -d int,cpu_reset
@@ -108,37 +142,37 @@ export ARC_MIRROR
 .PHONY: all
 all:
 ifeq ($(BSP),)
-	echo "No bootstrapper specified"
-	exit 1
+	$(ECHO) "No bootstrapper specified"
+	$(EXIT) 1
 endif
 
 ifeq ($(wildcard ../Kernel),)
-	git clone $(REPO_BASE_LINK)/Kernel ../Kernel --depth 1
-	cd ../Kernel && git submodule update --init
+	$(GIT) clone $(REPO_BASE_LINK)/Kernel ../Kernel --depth 1
+	$(CD) ../Kernel && git submodule update --init
 endif
 
 ifeq ($(wildcard ../Userspace),)
-	git clone $(REPO_BASE_LINK)/Userspace ../Userspace --depth 1
-	cd ../Userspace && git submodule update --init
+	$(GIT) clone $(REPO_BASE_LINK)/Userspace ../Userspace --depth 1
+	$(CD) ../Userspace && git submodule update --init
 endif
 
 ifeq ($(wildcard ../BSP-$(BSP)),)
-	git clone $(REPO_BASE_LINK)/BSP-$(BSP) ../BSP-$(BSP) --depth 1
-	cd ../BSP-$(BSP) && git submodule update --init
+	$(GIT) clone $(REPO_BASE_LINK)/BSP-$(BSP) ../BSP-$(BSP) --depth 1
+	$(CD) ../BSP-$(BSP) && git submodule update --init
 endif
 
-	rm -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	mkdir -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE) \
-		 $(ARC_HOST_PREFIX)/bin \
-		 $(ARC_HOST_PREFIX)/include \
-		 $(ARC_HOST_PREFIX)/lib \
-		 $(ARC_HOST_PREFIX)/share
+	$(RM) -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
+	$(MKDIR) -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE) \
+		    $(ARC_HOST_PREFIX)/bin \
+		    $(ARC_HOST_PREFIX)/include \
+		    $(ARC_HOST_PREFIX)/lib \
+		    $(ARC_HOST_PREFIX)/share
 
-	ln -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/bin
-	ln -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/sbin
-	ln -sfT $(ARC_HOST_PREFIX)/include $(ARC_SYSROOT)/include
-	ln -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib
-	ln -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
+	$(LN) -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/bin
+	$(LN) -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/sbin
+	$(LN) -sfT $(ARC_HOST_PREFIX)/include $(ARC_SYSROOT)/include
+	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib
+	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
 
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
@@ -149,29 +183,29 @@ endif
 
 $(ARC_PRODUCT):
 # Do the big things
-	bear --output ../Kernel/compile_commands.json -- $(MAKE) -C ../Kernel all
-	bear --output ../Userspace/compile_commands.json -- $(MAKE) -C ../Userspace all
+	$(BEAR) --output ../Kernel/compile_commands.json -- $(MAKE) -C ../Kernel all
+	$(BEAR) --output ../Userspace/compile_commands.json -- $(MAKE) -C ../Userspace all
 
 # Construct the initramfs
-	cd $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
-	cd $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
+	$(CD) $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
+	$(CD) $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
-	bear --output ../BSP-$(BSP)/compile_commands.json -- $(MAKE) -C ../BSP-$(BSP) all
+	$(BEAR) --output ../BSP-$(BSP)/compile_commands.json -- $(MAKE) -C ../BSP-$(BSP) all
 
 .PHONY: clean
 clean: prepare-rebuild
 	$(MAKE) -C ../Kernel clean
 	$(MAKE) -C ../Userspace clean
 	$(MAKE) -C ../BSP-$(BSP) clean
-	find . -type f -name "*.tar.gz" -delete
+	$(FIND) . -type f -name "*.tar.gz" -delete
 
 .PHONY: prepare-rebuild
 prepare-rebuild:
-	rm -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
-	find . -type f -name "build.complete" -delete
-	find $(ARC_TOOLCHAIN_HOST)/  -depth -type d -name "*-src" -exec rm -rf "{}" \; -or -name "build" -type d -exec rm -rf "{}" \;
-	find $(ARC_TOOLCHAIN_BUILD)/ -depth -type d -name "*-src" -exec rm -rf "{}" \; -or -name "build" -type d -exec rm -rf "{}" \;
+	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
+	$(FIND) . -type f -name "build.complete" -delete
+	$(FIND) $(ARC_TOOLCHAIN_HOST)/  -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;
+	$(FIND) $(ARC_TOOLCHAIN_BUILD)/ -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;
 
 .PHONY: run
 run: $(ARC_PRODUCT)
-	qemu-system-x86_64 $(QEMUFLAGS)
+	$(QEMU) $(QEMUFLAGS)
