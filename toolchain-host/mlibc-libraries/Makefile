@@ -1,9 +1,11 @@
 include $(ARC_TOOLCHAIN_HOST)/mlibc-headers/Makefile
 
+STANDALONE_LIBGCC_DATE := 2025-08-21
+STANDALONE_LIBGCC_MIRROR := https://github.com/osdev0/libgcc-binaries/releases/download/$(STANDALONE_LIBGCC_DATE)/libgcc-$(ARC_OPT_ARCH).a
+
 MESON_FLAGS := --reconfigure --cross-file $(ARC_BUILD_SUPPORT)/meson.cross --prefix=$(ARC_HOST_PREFIX) \
 		--buildtype=debugoptimized -Ddefault_library=both -Dlibgcc_dependency=false -Duse_freestnd_hdrs=enabled \
 		build
-
 
 NINJA_FLAGS := -C build
 
@@ -11,14 +13,15 @@ MLIBC_ROOT := $(ARC_TOOLCHAIN_HOST)/mlibc-headers/$(ARC_SOURCE_DIR)
 
 COMPLETE := $(shell realpath build.complete)
 
-$(COMPLETE):
-	make -C freestanding-libgcc-libraries
+$(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a:
+	$(CURL) -Lo $(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a $(STANDALONE_LIBGCC_MIRROR)
 
-	rm -rf $(MLIBC_ROOT)/build
-	mkdir -p $(MLIBC_ROOT)/build
+$(COMPLETE): $(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a
+	$(RM) -rf $(MLIBC_ROOT)/build
+	$(MKDIR) -p $(MLIBC_ROOT)/build
 
-	cd $(MLIBC_ROOT) && $(ARC_SET_COMPILER_ENV_FLAGS) LDFLAGS="-Wl,$(ARC_TOOLCHAIN_HOST)/mlibc-libraries/freestanding-libgcc-libraries/libgcc-bin/libgcc-x86_64.a" \
+	$(CD) $(MLIBC_ROOT) && $(ARC_SET_COMPILER_ENV_FLAGS) LDFLAGS="-Wl,$(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a" \
 			    meson setup $(MESON_FLAGS) -Dno_headers=true
-	meson install -C $(MLIBC_ROOT)/build
+	$(MESON) install -C $(MLIBC_ROOT)/build
 
-	touch $(COMPLETE)
+	$(TOUCH) $(COMPLETE)

@@ -1,5 +1,6 @@
 ARC_REPO := https://github.com/managarm/mlibc
-ARC_VERSION := fae50a5e9ac246e3fc03bcc26090db6ae43b5b3f
+ARC_VERSION := 25439798f12e44f31c6a059bb2507735529acdd2
+              #fae50a5e9ac246e3fc03bcc26090db6ae43b5b3f
 ARC_NAME := mlibc-$(ARC_VERSION)
 ARC_SOURCE_DIR := $(ARC_NAME)-src
 ARC_TAR := $(ARC_NAME).tar.gz
@@ -16,10 +17,10 @@ COMPLETE := $(shell realpath build.complete)
 $(COMPLETE):
 	$(ARC_BUILD_SUPPORT)/tar_helper.sh
 
-	mkdir -p $(ARC_SOURCE_DIR)/build
+	$(MKDIR) -p $(ARC_SOURCE_DIR)/build
 
-	cd $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) meson setup $(MESON_FLAGS) -Dheaders_only=true
-	meson install -C $(ARC_SOURCE_DIR)/build
+	$(CD) $(ARC_SOURCE_DIR) && $(MESON) subprojects download
+	$(CD) $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) meson setup $(MESON_FLAGS) -Dheaders_only=true
+	$(MESON) install -C $(ARC_SOURCE_DIR)/build
 
-	touch $(COMPLETE)
-
+	$(TOUCH) $(COMPLETE)
