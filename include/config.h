@@ -14,22 +14,20 @@
 // The number of ticks that constitute a single timeslice for
 // the scheduler
 #define ARC_TICKS_PER_TIMESLICE 1000
-// If this is set to 1 them the first 0x10000 bytes of memory
-// is reserved for legacy DMA (i.e. a floppy controller). If it 
-// set to 0, then the memory will be used as part of general
-// allocation
-// NOTE: This is a kernel option. A bootstrapper should always
-//       pass a free region < 0x10000 as low memory, and anything
-//       above as high memory
-#define ARC_SEPARATE_LOW_MEM 1
 // The number of file descriptors a single process can have
-#define ARC_PROCESS_FILE_LIMIT 1024
+#define ARC_PROCESS_FILE_LIMIT 512
 // The standard size of a memory buffer
 #define ARC_STD_BUFF_SIZE (size_t)0x1000
 
 // In the command line compile options it is possible to
 // define a COM port to have debug on, use -DARC_COM_PORT=0xXXX
 // (on x86-64 0x3F8 is COM1)
+
+// Default Kernel and Userpsace stack initial sizes
+// in bytes
+#define ARC_STD_KSTACK_SIZE (size_t)0x2000
+#define ARC_STD_USTACK_SIZE (size_t)0x2000
+
 
 #ifdef ARC_TARGET_ARCH_X86_64
 #include <arch/x86-64/config.h>
