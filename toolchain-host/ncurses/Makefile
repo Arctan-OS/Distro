@@ -7,13 +7,13 @@ ARC_MIRROR := https://invisible-mirror.net/archives/ncurses/$(ARC_TAR)
 COMPLETE := $(shell realpath build.complete)
 
 $(COMPLETE):
-	mkdir -p build
+	$(MKDIR) -p build
 
 	$(ARC_BUILD_SUPPORT)/tar_helper.sh
 
-	cd build &&  ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) --enable-shared --enable-host-shared
+	$(CD) build &&  ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) --enable-shared --enable-host-shared
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
-	touch $(COMPLETE)
+	$(TOUCH) $(COMPLETE)

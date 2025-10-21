@@ -22,11 +22,11 @@ $(COMPLETE):
 
 	$(MAKE) -C binutils
 
-	mkdir -p build
+	$(MKDIR) -p build
 
-	cd build && $(AC_CFLAGS) $(ARC_TOOLCHAIN_BUILD)/gcc/$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
+	$(CD) build && $(AC_CFLAGS) $(ARC_TOOLCHAIN_BUILD)/gcc/$(ARC_SOURCE_DIR)/configure $(AC_FLAGS) $(AC_EXTRA_FLAGS)
 
 	$(MAKE) -C build all-gcc
 	$(MAKE) -C build install-gcc
 
-	touch $(COMPLETE)
+	$(TOUCH) $(COMPLETE)

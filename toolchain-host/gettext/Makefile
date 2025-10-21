@@ -6,16 +6,16 @@ ARC_MIRROR := https://ftp.gnu.org/gnu/gettext/$(ARC_TAR)
 COMPLETE := $(shell realpath build.complete)
 
 $(COMPLETE):
-	mkdir -p build
+	$(MKDIR) -p build
 
 	$(ARC_BUILD_SUPPORT)/tar_helper.sh
 
-	cd build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
+	$(CD) build && ../$(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
 
-	rm ../libiconv/build.complete
+	$(RM) ../libiconv/build.complete
 	$(MAKE) -C ../libiconv
 
-	touch $(COMPLETE)
+	$(TOUCH) $(COMPLETE)
