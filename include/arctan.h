@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define ARC_CHECK_FEATURE(_field_, _feature_) ((Arc_CurProcessorDescriptor->features._field_ >> (_feature_)) & 1)
+
 #ifdef ARC_TARGET_ARCH_X86_64
         enum {
   	        ARC_BOOTPROC_ARCTAN = 1,
@@ -32,8 +34,30 @@
 	        ARC_PAGER_FLAG_MAX,
         };
 
+        enum {
+                ARC_PROC0_FLAG_FXSAVE = 0,
+		ARC_PROC0_FLAG_XSAVE,
+		ARC_PROC0_FLAG_SSE1,
+		ARC_PROC0_FLAG_SSE2,
+		ARC_PROC0_FLAG_SSE3,
+		ARC_PROC0_FLAG_SSSE3,
+		ARC_PROC0_FLAG_SSE4_1,
+		ARC_PROC0_FLAG_SSE4_2,
+		ARC_PROC0_FLAG_X2APIC,
+		ARC_PROC0_FLAG_TSC,
+		ARC_PROC0_FLAG_CLFLUSH,
+		ARC_PROC0_FLAG_APIC,
+		ARC_PROC0_FLAG_SELF_SNOOP,
+		ARC_PROC0_FLAG_MSR,
+		ARC_PROC0_FLAG_AVX,
+		ARC_PROC0_FLAG_RDRND,
+		ARC_PROC0_FLAG_VMX,
+		ARC_PROC0_FLAG_HYPERVISOR
+        };
+
         typedef struct ARC_ProcessorFeatures {
 	        uint64_t paging;
+		uint64_t proc0;
         } ARC_ProcessorFeatures;
 #endif
 
