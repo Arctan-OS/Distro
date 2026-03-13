@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define ARC_CHECK_FEATURE(_field_, _feature_) ((Arc_CurProcessorDescriptor->features._field_ >> (_feature_)) & 1)
-
 #ifdef ARC_TARGET_ARCH_X86_64
+        #define ARC_CHECK_FEATURE(_field_, _feature_) ((Arc_CurProcessorDescriptor->features._field_ >> (_feature_)) & 1)
+
         enum {
   	        ARC_BOOTPROC_ARCTAN = 1,
 	        ARC_BOOTPROC_MB2,
@@ -59,6 +59,10 @@
 	        uint64_t paging;
 		uint64_t proc0;
         } ARC_ProcessorFeatures;
+#endif
+
+#ifndef ARC_CHECK_FEATURE
+        #error "ARC_CHECK_FEATURE is not defined"
 #endif
 
 typedef struct ARC_KernelMeta{
