@@ -6,6 +6,15 @@ ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 export ARC_ROOT
 export ARC_PRODUCT
 
+QEMUFLAGS := -M q35,smm=off -m 32M -boot d -cdrom $(ARC_PRODUCT) \
+	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
+	     -drive file=test_disk.img,if=none,id=NVME1 \
+	     -device nvme,drive=NVME1,serial=nvme-1 \
+	     -d int,cpu_reset -no-reboot -no-shutdown \
+	     -serial stdio \
+#	     -trace "pci_nvme_*"
+
+
 BEAR ?= bear
 CD ?= cd
 CP ?= cp
@@ -43,6 +52,7 @@ export TOUCH
 BSP ?= GRUB
 ARCH ?= x86-64
 LIBC ?= mlibc
+CONV ?= sysv
 SCHED ?= rr
 COM ?=
 DEBUG ?=
@@ -59,6 +69,17 @@ endif
 
 export ARC_OPT_ARCH
 export ARC_DEF_ARCH
+
+ARC_OPT_CONV := SYSV
+ARC_DEF_CONV := -DARC_TARGET_CONV_SYSV
+# Placeholder convention
+ifeq ($(CONV), AAA)
+	ARC_OPT_CONV := 3A
+	ARC_DEF_CONV := -DARC_TARGET_CONV_3A
+endif
+
+export ARC_OPT_CONV
+export ARC_DEF_CONV
 
 ARC_OPT_SCHED := RR
 ARC_DEF_SCHED := -DARC_TARGET_SCHED_RR
@@ -124,12 +145,6 @@ export ARC_SET_TARGET_COMPILER_ENV_FLAGS
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
 
-QEMUFLAGS := -M q35,smm=off -m 8G -boot d -cdrom $(ARC_PRODUCT) -serial stdio \
-	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
-	     -drive file=test_disk.img,if=none,id=NVME1 \
-	     -device nvme,drive=NVME1,serial=nvme-1 \
-	     -d int,cpu_reset
-
 # Set these exports for the many Makefiles in $(ARC_TOOLCHAIN_BUILD)
 # and $(ARC_TOOLCHAIN_HOST) such that they can interface with some of
 # the build support utilities (like $(ARC_BUILD_SUPPORT)/tar_helper.sh)
@@ -191,6 +206,7 @@ $(ARC_PRODUCT):
 	$(CD) $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
 
 	$(BEAR) --output ../BSP-$(BSP)/compile_commands.json -- $(MAKE) -C ../BSP-$(BSP) all
+	$(CP) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
 
 .PHONY: clean
 clean: prepare-rebuild
@@ -209,3 +225,7 @@ prepare-rebuild:
 .PHONY: run
 run: $(ARC_PRODUCT)
 	$(QEMU) $(QEMUFLAGS)
+
+.PHONY: drun
+drun: $(ARC_PRODUCT)
+	$(QEMU) $(QEMUFLAGS) -s -S
