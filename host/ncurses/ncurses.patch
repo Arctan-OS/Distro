@@ -1,0 +1,24 @@
+diff --git a/config.sub b/config.sub
+index 979a039..f8df290 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1327,6 +1327,10 @@ EOF
+ 		kernel=managarm
+ 		os=`echo "$basic_os" | sed -e 's|managarm|mlibc|'`
+ 		;;
++	arctan*)
++		kernel=arctan
++		os=`echo "$basic_os" | sed -e 's|arctan|mlibc|'`
++		;;
+ 	*)
+ 		kernel=
+ 		os=$basic_os
+@@ -1835,6 +1839,8 @@ case $kernel-$os-$obj in
+ 		;;
+ 	managarm-mlibc*- | managarm-kernel*- )
+ 		;;
++	arctan-mlibc*- )
++		;;
+ 	windows*-msvc*-)
+ 		;;
+ 	-dietlibc*- | -llvm*- | -mlibc*- | -musl*- | -newlib*- | -relibc*- \

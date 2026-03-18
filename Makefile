@@ -105,10 +105,13 @@ endif
 export ARC_OPT_DEBUG
 export ARC_DEF_DEBUG
 
+ARC_BUILDROOT := $(ARC_ROOT)/buildroot
 ARC_SYSROOT := $(ARC_ROOT)/sysroot
 ARC_INITRAMFS := $(ARC_ROOT)/initramfs
-ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain-build
-ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/toolchain-host
+# TODO: Rename to just ARC_TOOLCHAIN
+ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain
+# TODO: Rename to just ARC_HOST
+ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/host
 ARC_VOLATILE := $(ARC_ROOT)/volatile
 ARC_BUILD_SUPPORT := $(ARC_ROOT)/build-support
 ARC_INCLUDE_DIRS := -I$(ARC_ROOT)/include -I$(ARC_SYSROOT)/include
@@ -154,8 +157,16 @@ export ARC_SOURCE_DIR
 export ARC_TAR
 export ARC_MIRROR
 
+ARC_PRODUCT_ENV_FLAGS := CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v"
+
 .PHONY: all
-all:
+all: check-projects prepare-dirs
+	$(RM) -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
+	$(MAKE) buildroot
+	$(MAKE) sysroot
+
+.PHONY: check-projects
+check-projects:
 ifeq ($(BSP),)
 	$(ECHO) "No bootstrapper specified"
 	$(EXIT) 1
@@ -176,11 +187,15 @@ ifeq ($(wildcard ../BSP-$(BSP)),)
 	$(CD) ../BSP-$(BSP) && git submodule update --init
 endif
 
-	$(RM) -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	$(MKDIR) -p $(ARC_INITRAMFS) $(ARC_SYSROOT) $(ARC_VOLATILE) \
-		    $(ARC_HOST_PREFIX)/bin \
+.PHONY: prepare-dirs
+prepare-dirs:
+	$(MKDIR) -p $(ARC_SYSROOT)             \
+		    $(ARC_VOLATILE)            \
+		    $(ARC_BUILDROOT)           \
+		    $(ARC_INITRAMFS)           \
+		    $(ARC_HOST_PREFIX)/bin     \
 		    $(ARC_HOST_PREFIX)/include \
-		    $(ARC_HOST_PREFIX)/lib \
+		    $(ARC_HOST_PREFIX)/lib     \
 		    $(ARC_HOST_PREFIX)/share
 
 	$(LN) -sfT $(ARC_HOST_PREFIX)/bin     $(ARC_SYSROOT)/bin
@@ -189,12 +204,18 @@ endif
 	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib
 	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
 
+.PHONY: buildroot
+buildroot:
 # Make the build machine's toolchain under $(ARC_BUILD)
 	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
+	$(CP) -r $(ARC_SYSROOT)/* $(ARC_BUILDROOT)
+
+.PHONY: sysroot
+sysroot:
 # Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
 	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
 # Put together the ISO using the toolchain
-	CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v" $(MAKE) $(ARC_PRODUCT)
+	$(ARC_PRODUCT_ENV_FLAGS) $(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
 # Do the big things
@@ -209,14 +230,22 @@ $(ARC_PRODUCT):
 	$(CP) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
 
 .PHONY: clean
-clean: prepare-rebuild
+clean: prepare-full-rebuild
 	$(MAKE) -C ../Kernel clean
 	$(MAKE) -C ../Userspace clean
 	$(MAKE) -C ../BSP-$(BSP) clean
 	$(FIND) . -type f -name "*.tar.gz" -delete
 
+.PHONY: prepare-host-rebuild
+prepare-host-rebuild:
+	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
+	$(MKDIR) -p $(ARC_SYSROOT)
+	$(CP) -r $(ARC_BUILDROOT)/* $(ARC_SYSROOT)
+	$(FIND) $(ARC_TOOLCHAIN_HOST)/ -type f -name "build.complete" -delete
+	$(FIND) $(ARC_TOOLCHAIN_HOST)/ -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;	
+
 .PHONY: prepare-rebuild
-prepare-rebuild:
+prepare-full-rebuild:
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
 	$(FIND) . -type f -name "build.complete" -delete
 	$(FIND) $(ARC_TOOLCHAIN_HOST)/  -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;

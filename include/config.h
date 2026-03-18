@@ -28,6 +28,7 @@
 #define ARC_STD_KSTACK_SIZE (size_t)0x2000
 #define ARC_STD_USTACK_SIZE (size_t)0x2000
 
+#define ARC_SYSCALL_STACK_SIZE 0x2000
 
 #ifdef ARC_TARGET_ARCH_X86_64
 #include <arch/x86-64/config.h>
