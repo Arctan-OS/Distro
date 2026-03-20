@@ -12,14 +12,14 @@ USE_SRC_DIR_OF := mlibc-headers
 
 .PHONY: build
 build:
-	$(RM) -rf $(MLIBC_ROOT)/build
-	$(MKDIR) -p $(MLIBC_ROOT)/build
-	
+	$(RM) -rf $(ARC_SOURCE_DIR)/build
+	$(MKDIR) -p $(ARC_SOURCE_DIR)/build
+
 # Is this really needed anymore?
-# LDFLAGS="-Wl,$(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a"
-	$(CD) $(MLIBC_ROOT) && $(ARC_SET_COMPILER_ENV_FLAGS) \
+# LDFLAGS="-Wl,$(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a"
+	$(CD) $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) \
 			    meson setup $(MESON_FLAGS) -Dno_headers=true
-	$(MESON) install -C $(MLIBC_ROOT)/build
+	$(MESON) install -C $(ARC_SOURCE_DIR)/build
 
 
 .PHONY: clean

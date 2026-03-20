@@ -2,7 +2,6 @@ include $(ARC_BUILD_SUPPORT)/mlibc-flags
 
 DEPS :=
 
-
 .PHONY: build
 build:
 	$(MKDIR) -p $(ARC_SOURCE_DIR)/build

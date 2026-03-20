@@ -12,7 +12,7 @@ build:
 # TODO: Fix some directories returning libtoolize:   error: AC_CONFIG_MACRO_DIRS([../../config]) conflicts with ACLOCAL_AMFLAGS=-I ..
 	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 
-	$(CD) build && $(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
+	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install

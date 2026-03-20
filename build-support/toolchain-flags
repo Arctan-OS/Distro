@@ -6,3 +6,13 @@ AC_FLAGS := \
 		--disable-werror
 
 export AC_FLAGS
+
+# NOTE: This assumes a structure as:
+#       .autogen/
+#        build/
+#         target-version/
+#          configure
+#       targets/
+#        target/
+#	  build
+AC_CONFIG_PATH := ../$(shell realpath --relative-to=. $(ARC_SOURCE_DIR)/configure)

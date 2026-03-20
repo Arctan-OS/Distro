@@ -121,10 +121,11 @@ export OS_TRIPLET
 export ARC_BUILD_PREFIX
 export ARC_HOST_PREFIX
 
+# TODO: Stop duplication of the first element in path
 PATH                              := $(ARC_BUILD_PREFIX)/bin:$(PATH)
 CFLAGS                            := -O2 -pipe -fstack-clash-protection
 CXXFLAGS                          := $(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
-LDFLAGS                           :=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
+LDFLAGS                           := -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
 ARC_SET_BUILD_COMPILER_ENV_FLAGS  := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 ARC_SET_TARGET_COMPILER_ENV_FLAGS := CFLAGS_FOR_TARGET="$(CFLAGS)" CXXFLAGS_FOR_TARGET="$(CXXFLAGS)"
 ARC_INCLUDE_DIRS                  := -I$(ARC_ROOT)/include -I$(ARC_SYSROOT)/include

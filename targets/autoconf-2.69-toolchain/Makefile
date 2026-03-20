@@ -9,7 +9,7 @@ URLS := https://ftp.gnu.org/gnu/autoconf/$(NAME).tar.gz
 build:
 	$(MKDIR) -p build
 
-	$(CD) build && $(ARC_SOURCE_DIR)/configure $(AC_FLAGS)
+	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
 
 	$(MAKE) -C build
 	$(MAKE) -C build install
