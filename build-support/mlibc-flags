@@ -1,0 +1,9 @@
+VERSION := af271dbcf0a4ea52e848c024a03252ed449d77f8
+NAME := mlibc-$(VERSION)
+URLS := https://github.com/managarm/mlibc/archive/$(VERSION).tar.gz
+
+MESON_FLAGS := --reconfigure --cross-file $(ARC_BUILD_SUPPORT)/meson.cross --prefix=$(ARC_HOST_PREFIX) \
+		--buildtype=debugoptimized -Ddefault_library=both \
+		build
+
+NINJA_FLAGS := -C build

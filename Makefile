@@ -1,10 +1,7 @@
-REPO_BASE_LINK ?= https://github.com/Arctan-OS
-
 ARC_ROOT := $(shell pwd)
-ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
-
 export ARC_ROOT
-export ARC_PRODUCT
+
+ARC_PRODUCT := Arctan.iso
 
 QEMUFLAGS := -M q35,smm=off -m 32M -boot d -cdrom $(ARC_PRODUCT) \
 	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
@@ -14,22 +11,25 @@ QEMUFLAGS := -M q35,smm=off -m 32M -boot d -cdrom $(ARC_PRODUCT) \
 	     -serial stdio \
 #	     -trace "pci_nvme_*"
 
+CORES ?= $(shell echo $$(($(shell nproc) / 2)))
+MAKEFLAGS += -j$(CORES)
+export MAKEFLAGS
 
-BEAR ?= bear
-CD ?= cd
-CP ?= cp
-CURL ?= curl
-ECHO ?= echo
-EXIT ?= exit
-FIND ?= find
-GIT ?= git
-LN ?= ln
+BEAR  ?= bear
+CD    ?= cd
+CP    ?= cp
+CURL  ?= curl
+ECHO  ?= echo
+EXIT  ?= exit
+FIND  ?= find
+GIT   ?= git
+LN    ?= ln
 MESON ?= meson
 MKDIR ?= mkdir
-MV ?= mv
-QEMU ?= qemu-system-x86_64
-RM ?= rm
-TAR ?= tar
+MV    ?= mv
+QEMU  ?= qemu-system-x86_64
+RM    ?= rm
+TAR   ?= tar
 TOUCH ?= touch
 
 export BEAR
@@ -49,15 +49,13 @@ export RM
 export TAR
 export TOUCH
 
-BSP ?= GRUB
-ARCH ?= x86-64
-LIBC ?= mlibc
-CONV ?= sysv
+BSP   ?= GRUB
+ARCH  ?= x86-64
+LIBC  ?= mlibc
+CONV  ?= sysv
 SCHED ?= rr
-COM ?=
-DEBUG ?=
-CORES ?= $(shell echo $$(($(shell nproc) / 2)))
-MAKEFLAGS += -j$(CORES)
+COM   ?= 0x3F8
+DEBUG ?= no
 
 ARC_OPT_ARCH := x86_64
 ARC_DEF_ARCH := -DARC_TARGET_ARCH_X86_64
@@ -105,93 +103,55 @@ endif
 export ARC_OPT_DEBUG
 export ARC_DEF_DEBUG
 
-ARC_BUILDROOT := $(ARC_ROOT)/buildroot
-ARC_SYSROOT := $(ARC_ROOT)/sysroot
-ARC_INITRAMFS := $(ARC_ROOT)/initramfs
-# TODO: Rename to just ARC_TOOLCHAIN
-ARC_TOOLCHAIN_BUILD := $(ARC_ROOT)/toolchain
-# TODO: Rename to just ARC_HOST
-ARC_TOOLCHAIN_HOST := $(ARC_ROOT)/host
-ARC_VOLATILE := $(ARC_ROOT)/volatile
+ARC_SYSROOT       := $(ARC_ROOT)/sysroot
+ARC_INITRAMFS     := $(ARC_ROOT)/initramfs
+ARC_VOLATILE      := $(ARC_ROOT)/volatile
 ARC_BUILD_SUPPORT := $(ARC_ROOT)/build-support
-ARC_INCLUDE_DIRS := -I$(ARC_ROOT)/include -I$(ARC_SYSROOT)/include
 
 export ARC_SYSROOT
 export ARC_INITRAMFS
-export ARC_TOOLCHAIN_BUILD
-export ARC_TOOLCHAIN_HOST
 export ARC_VOLATILE
 export ARC_BUILD_SUPPORT
-export ARC_INCLUDE_DIRS
 
-OS_TRIPLET := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
-ARC_BUILD_PREFIX := $(ARC_SYSROOT)/usr/cross
-ARC_HOST_PREFIX := $(ARC_SYSROOT)/usr
+OS_TRIPLET        := $(ARC_OPT_ARCH)-pc-arctan-$(LIBC)
+ARC_BUILD_PREFIX  := $(ARC_SYSROOT)/usr/cross
+ARC_HOST_PREFIX   := $(ARC_SYSROOT)/usr
 
 export OS_TRIPLET
 export ARC_BUILD_PREFIX
 export ARC_HOST_PREFIX
 
-PATH := $(ARC_BUILD_PREFIX)/bin:$(PATH)
-CFLAGS=-O2 -pipe -fstack-clash-protection
-CXXFLAGS=$(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
-LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
-ARC_SET_BUILD_COMPILER_ENV_FLAGS := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
+PATH                              := $(ARC_BUILD_PREFIX)/bin:$(PATH)
+CFLAGS                            := -O2 -pipe -fstack-clash-protection
+CXXFLAGS                          := $(CFLAGS) -Wp,-D_GLIBCXX_ASSERTIONS
+LDFLAGS                           :=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now
+ARC_SET_BUILD_COMPILER_ENV_FLAGS  := CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 ARC_SET_TARGET_COMPILER_ENV_FLAGS := CFLAGS_FOR_TARGET="$(CFLAGS)" CXXFLAGS_FOR_TARGET="$(CXXFLAGS)"
+ARC_INCLUDE_DIRS                  := -I$(ARC_ROOT)/include -I$(ARC_SYSROOT)/include
 
 export CFLAGS
 export CXXFLAGS
 export LDFLAGS
 export ARC_SET_COMPILER_ENV_FLAGS
 export ARC_SET_TARGET_COMPILER_ENV_FLAGS
+export ARC_INCLUDE_DIRS
 
 INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
-LIVE_ENV_IMAGE := $(ARC_VOLATILE)/live_env.cpio
-
-# Set these exports for the many Makefiles in $(ARC_TOOLCHAIN_BUILD)
-# and $(ARC_TOOLCHAIN_HOST) such that they can interface with some of
-# the build support utilities (like $(ARC_BUILD_SUPPORT)/tar_helper.sh)
-export ARC_VERSION
-export ARC_NAME
-export ARC_SOURCE_DIR
-export ARC_TAR
-export ARC_MIRROR
+LIVE_ENV_IMAGE  := $(ARC_VOLATILE)/live_env.cpio
 
 ARC_PRODUCT_ENV_FLAGS := CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v"
 
 .PHONY: all
-all: check-projects prepare-dirs
+all: $(ARC_SYSROOT)
 	$(RM) -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
-	$(MAKE) buildroot
-	$(MAKE) sysroot
+	$(MAKE) $(ARC_PRODUCT)
 
-.PHONY: check-projects
-check-projects:
-ifeq ($(BSP),)
-	$(ECHO) "No bootstrapper specified"
-	$(EXIT) 1
-endif
+$(ARC_PRODUCT):
+	./bob.sh build Arctan.iso
 
-ifeq ($(wildcard ../Kernel),)
-	$(GIT) clone $(REPO_BASE_LINK)/Kernel ../Kernel --depth 1
-	$(CD) ../Kernel && git submodule update --init
-endif
-
-ifeq ($(wildcard ../Userspace),)
-	$(GIT) clone $(REPO_BASE_LINK)/Userspace ../Userspace --depth 1
-	$(CD) ../Userspace && git submodule update --init
-endif
-
-ifeq ($(wildcard ../BSP-$(BSP)),)
-	$(GIT) clone $(REPO_BASE_LINK)/BSP-$(BSP) ../BSP-$(BSP) --depth 1
-	$(CD) ../BSP-$(BSP) && git submodule update --init
-endif
-
-.PHONY: prepare-dirs
-prepare-dirs:
+$(ARC_SYSROOT):
 	$(MKDIR) -p $(ARC_SYSROOT)             \
 		    $(ARC_VOLATILE)            \
-		    $(ARC_BUILDROOT)           \
 		    $(ARC_INITRAMFS)           \
 		    $(ARC_HOST_PREFIX)/bin     \
 		    $(ARC_HOST_PREFIX)/include \
@@ -204,52 +164,15 @@ prepare-dirs:
 	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib
 	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
 
-.PHONY: buildroot
-buildroot:
-# Make the build machine's toolchain under $(ARC_BUILD)
-	$(MAKE) -C $(ARC_TOOLCHAIN_BUILD)
-	$(CP) -r $(ARC_SYSROOT)/* $(ARC_BUILDROOT)
+.PHONY: clean-all
+clean-all:
+	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
+	./bob.sh clean all
 
-.PHONY: sysroot
-sysroot:
-# Put together the host machine's toolchain and other dependencies under $(ARC_HOST)
-	$(MAKE) -C $(ARC_TOOLCHAIN_HOST)
-# Put together the ISO using the toolchain
-	$(ARC_PRODUCT_ENV_FLAGS) $(MAKE) $(ARC_PRODUCT)
-
-$(ARC_PRODUCT):
-# Do the big things
-	$(BEAR) --output ../Kernel/compile_commands.json -- $(MAKE) -C ../Kernel all
-	$(BEAR) --output ../Userspace/compile_commands.json -- $(MAKE) -C ../Userspace all
-
-# Construct the initramfs
-	$(CD) $(ARC_INITRAMFS) && find . | cpio -o > $(INITRAMFS_IMAGE)
-	$(CD) $(ARC_SYSROOT) && find . | cpio -o > $(LIVE_ENV_IMAGE)
-
-	$(BEAR) --output ../BSP-$(BSP)/compile_commands.json -- $(MAKE) -C ../BSP-$(BSP) all
-	$(CP) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
-
-.PHONY: clean
-clean: prepare-full-rebuild
-	$(MAKE) -C ../Kernel clean
-	$(MAKE) -C ../Userspace clean
-	$(MAKE) -C ../BSP-$(BSP) clean
-	$(FIND) . -type f -name "*.tar.gz" -delete
-
-.PHONY: prepare-host-rebuild
-prepare-host-rebuild:
-	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
-	$(MKDIR) -p $(ARC_SYSROOT)
-	$(CP) -r $(ARC_BUILDROOT)/* $(ARC_SYSROOT)
-	$(FIND) $(ARC_TOOLCHAIN_HOST)/ -type f -name "build.complete" -delete
-	$(FIND) $(ARC_TOOLCHAIN_HOST)/ -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;	
-
-.PHONY: prepare-rebuild
-prepare-full-rebuild:
-	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE) $(ARC_PRODUCT)
-	$(FIND) . -type f -name "build.complete" -delete
-	$(FIND) $(ARC_TOOLCHAIN_HOST)/  -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;
-	$(FIND) $(ARC_TOOLCHAIN_BUILD)/ -depth -type d -name "*-src" -exec $(RM) -rf "{}" \; -or -name "build" -type d -exec $(RM) -rf "{}" \;
+.PHONY: rebuild-all
+rebuild-all:
+	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
+	./bob.sh rebuild all
 
 .PHONY: run
 run: $(ARC_PRODUCT)

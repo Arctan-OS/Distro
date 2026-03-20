@@ -1,0 +1,8 @@
+AC_FLAGS := \
+		--target=$(OS_TRIPLET) \
+		--prefix=$(ARC_BUILD_PREFIX) \
+		--with-sysroot=$(ARC_SYSROOT) \
+		--disable-nls \
+		--disable-werror
+
+export AC_FLAGS
