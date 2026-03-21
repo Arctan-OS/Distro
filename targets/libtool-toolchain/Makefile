@@ -9,6 +9,7 @@ URLS := https://mirror.csclub.uwaterloo.ca/gnu/libtool/$(NAME).tar.gz
 build:
 	$(MKDIR) -p build
 
+	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
 
 	$(MAKE) -C build

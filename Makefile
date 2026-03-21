@@ -1,3 +1,8 @@
+# Installed on build machine:
+#  help2man - autoconf
+#  inetutils - autoconf `hostname`
+
+
 ARC_ROOT := $(shell pwd)
 export ARC_ROOT
 

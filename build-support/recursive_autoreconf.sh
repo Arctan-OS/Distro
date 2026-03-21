@@ -1,4 +1,5 @@
 rm -f $ARC_SOURCE_DIR/reconfigure.log
+touch $ARC_SOURCE_DIR/reconfigure.log
 
 # Provide sysroot ACLOCAL include directory if present
 ACLOCAL_INC=""
@@ -16,8 +17,7 @@ fi
 # Reconfigure the deepest directories first (that contain a file or files
 # named configure.ac configure.in or configure). Once reconfigured, add these
 # directories to a list of directories that have been reconfigured
-for d in $(find $ARC_SOURCE_DIR -depth -type d);
-do
+for d in $(find $ARC_SOURCE_DIR -depth -type d); do
     conf=$(find $d -name configure.ac -or -name configure.in -or -name configure -type f)
 
     if [ -z $(grep -zoP "$d\n" $ARC_SOURCE_DIR/reconfigure.log) ] && [ -n "$conf" ]; then

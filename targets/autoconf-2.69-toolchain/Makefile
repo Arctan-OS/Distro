@@ -9,6 +9,7 @@ URLS := https://ftp.gnu.org/gnu/autoconf/$(NAME).tar.gz
 build:
 	$(MKDIR) -p build
 
+	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
 
 	$(MAKE) -C build
