@@ -1,0 +1,114 @@
+diff --git a/../../../.autogen/clean/autoconf-2.69-toolchain-2.69/build-aux/config.sub b/./build-aux/config.sub
+index 59bb593..9592539 100755
+--- a/../../../.autogen/clean/autoconf-2.69-toolchain-2.69/build-aux/config.sub
++++ b/./build-aux/config.sub
+@@ -4,7 +4,7 @@
+ #   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+ #   2011, 2012 Free Software Foundation, Inc.
+ 
+-timestamp='2012-04-18'
++timestamp='2024-09-10'
+ 
+ # This file is (in principle) common to ALL GNU software.
+ # The presence of a machine in this file suggests that SOME GNU software
+@@ -1339,6 +1339,9 @@ case $os in
+ 	-gnu/linux*)
+ 		os=`echo $os | sed -e 's|gnu/linux|linux-gnu|'`
+ 		;;
++	-arctan*)
++		os=`echo $os | sed -e 's|arctan|mlibc|'`
++		;;
+ 	# First accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+@@ -1368,7 +1371,7 @@ case $os in
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -mlibc* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+diff --git a/../../../.autogen/clean/autoconf-2.69-toolchain-2.69/doc/autoconf.texi b/./doc/autoconf.texi
+index 34ca213..f546d14 100644
+--- a/../../../.autogen/clean/autoconf-2.69-toolchain-2.69/doc/autoconf.texi
++++ b/./doc/autoconf.texi
+@@ -6,7 +6,7 @@
+ @settitle Autoconf
+ @setchapternewpage odd
+ @ifnothtml
+-@setcontentsaftertitlepage
++@comment obsolete: @setcontentsaftertitlepage
+ @end ifnothtml
+ @finalout
+ 
+@@ -8013,10 +8013,8 @@ variables, respectively.  The computed linker flags are cached in
+ @code{ac_cv_f77_libs} or @code{ac_cv_fc_libs}, respectively.
+ @end defmac
+ 
+-@defmac AC_F77_DUMMY_MAIN (@ovar{action-if-found}, @dvar{action-if-not-found, @
+-  AC_MSG_FAILURE})
+-@defmacx AC_FC_DUMMY_MAIN (@ovar{action-if-found}, @dvar{action-if-not-found, @
+-  AC_MSG_FAILURE})
++@defmac AC_F77_DUMMY_MAIN (@ovar{action-if-found}, @dvar{action-if-not-found, @AC_MSG_FAILURE})
++@defmacx AC_FC_DUMMY_MAIN (@ovar{action-if-found}, @dvar{action-if-not-found, @AC_MSG_FAILURE})
+ @acindex{F77_DUMMY_MAIN}
+ @cvindex F77_DUMMY_MAIN
+ @acindex{FC_DUMMY_MAIN}
+@@ -8201,10 +8199,8 @@ information other than through the C preprocessor as above, for example,
+ to call Fortran routines from some language other than C/C++.
+ @end defmac
+ 
+-@defmac AC_FC_SRCEXT (@var{ext}, @ovar{action-if-success}, @
+-  @dvar{action-if-failure, AC_MSG_FAILURE})
+-@defmacx AC_FC_PP_SRCEXT (@var{ext}, @ovar{action-if-success}, @
+-  @dvar{action-if-failure, AC_MSG_FAILURE})
++@defmac AC_FC_SRCEXT (@var{ext}, @ovar{action-if-success}, @dvar{action-if-failure, AC_MSG_FAILURE})
++@defmacx AC_FC_PP_SRCEXT (@var{ext}, @ovar{action-if-success}, @dvar{action-if-failure, AC_MSG_FAILURE})
+ @acindex{FC_SRCEXT}
+ @acindex{FC_PP_SRCEXT}
+ @caindex fc_srcext_@var{ext}
+@@ -8267,8 +8263,7 @@ results in @code{ac_cv_fc_srcext_@var{ext}} and
+ @code{ac_cv_fc_pp_srcext_@var{ext}} variables, respectively.
+ @end defmac
+ 
+-@defmac AC_FC_PP_DEFINE (@ovar{action-if-success}, @dvar{action-if-failure, @
+-  AC_MSG_FAILURE})
++@defmac AC_FC_PP_DEFINE (@ovar{action-if-success}, @dvar{action-if-failure, @AC_MSG_FAILURE})
+ @acindex{FC_PP_DEFINE}
+ @caindex fc_pp_define
+ 
+@@ -8286,8 +8281,7 @@ The result of this test is cached in the @code{ac_cv_fc_pp_define}
+ variable.
+ @end defmac
+ 
+-@defmac AC_FC_FREEFORM (@ovar{action-if-success}, @dvar{action-if-failure, @
+-  AC_MSG_FAILURE})
++@defmac AC_FC_FREEFORM (@ovar{action-if-success}, @dvar{action-if-failure, @AC_MSG_FAILURE})
+ @acindex{FC_FREEFORM}
+ @caindex fc_freeform
+ 
+@@ -8313,8 +8307,7 @@ The result of this test, or @samp{none} or @samp{unknown}, is cached in
+ the @code{ac_cv_fc_freeform} variable.
+ @end defmac
+ 
+-@defmac AC_FC_FIXEDFORM (@ovar{action-if-success}, @dvar{action-if-failure, @
+-  AC_MSG_FAILURE})
++@defmac AC_FC_FIXEDFORM (@ovar{action-if-success}, @dvar{action-if-failure, @AC_MSG_FAILURE})
+ @acindex{FC_FIXEDFORM}
+ @caindex fc_fixedform
+ 
+@@ -8375,10 +8368,8 @@ The result of the macro is cached in the @code{ac_cv_fc_check_bounds}
+ variable.
+ @end defmac
+ 
+-@defmac AC_F77_IMPLICIT_NONE (@ovar{action-if-success}, @
+-  @dvar{action-if-failure, AC_MSG_FAILURE})
+-@defmacx AC_FC_IMPLICIT_NONE (@ovar{action-if-success}, @
+-  @dvar{action-if-failure, AC_MSG_FAILURE})
++@defmac AC_F77_IMPLICIT_NONE (@ovar{action-if-success}, @dvar{action-if-failure, AC_MSG_FAILURE})
++@defmacx AC_FC_IMPLICIT_NONE (@ovar{action-if-success}, @dvar{action-if-failure, AC_MSG_FAILURE})
+ @acindex{F77_IMPLICIT_NONE}
+ @acindex{FC_IMPLICIT_NONE}
+ @caindex f77_implicit_none

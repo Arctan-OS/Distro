@@ -1,6 +1,6 @@
 include $(ARC_BUILD_SUPPORT)/toolchain-flags
 
-DEPS := binutils-toolchain
+DEPS := tc-binutils
 VERSION := 15.2.0
 NAME := gcc-$(VERSION)
 URLS := https://ftp.gnu.org/gnu/gcc/$(NAME)/$(NAME).tar.gz
@@ -19,17 +19,18 @@ AC_EXTRA_FLAGS := \
 # Now build-dir is in src-dir
 .PHONY: build
 build:
-	$(MKDIR) -p build
-
 	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libgcc
 	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libiberty
 
 	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh -I"$$(realpath $(ARC_SOURCE_DIR)/config)"
 
-	$(CD) build && $(ARC_SET_COMPILER_ENV_FLAGS) $(ARC_SET_TARGET_COMPILER_ENV_FLAGS) $(AC_CONFIG_PATH) $(AC_FLAGS) $(AC_EXTRA_FLAGS)
-
-	$(MAKE) -C build all-gcc
-	$(MAKE) -C build install-gcc
+	$(CD) $(ARC_SOURCE_DIR)/../          && \
+		$(MKDIR) -p build            && \
+		$(CD) build                  && \
+		../src/configure $(AC_FLAGS) && \
+		$(CD) ../                    && \
+		$(MAKE) -C build all-gcc     && \
+                $(MAKE) -C build install-gcc
 
 .PHONY: clean
 clean:

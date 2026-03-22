@@ -180,6 +180,17 @@ rebuild-all:
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	./bob.sh rebuild all
 
+
+TARGET ?=
+
+.PHONY: rebuild
+rebuild:
+	./bob.sh rebuild $(TARGET)
+
+.PHONY: mkpatch
+mkpatch:
+	./bob.sh mkpatch $(TARGET)
+
 .PHONY: run
 run: $(ARC_PRODUCT)
 	$(QEMU) $(QEMUFLAGS)

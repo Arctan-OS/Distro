@@ -3,22 +3,19 @@ include $(ARC_BUILD_SUPPORT)/mlibc-flags
 DEPS := mlibc-headers
 USE_SRC_DIR_OF := mlibc-headers
 
-# Is this really needed anymore to build?
-# STANDALONE_LIBGCC_DATE := 2025-08-21
-# STANDALONE_LIBGCC_MIRROR := https://github.com/osdev0/libgcc-binaries/releases/download/$(STANDALONE_LIBGCC_DATE)/libgcc-$(ARC_OPT_ARCH).a
-# $(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a:
-# 	$(CURL) -Lo $(MLIBC_ROOT)/libgcc-$(ARC_OPT_ARCH).a $(STANDALONE_LIBGCC_MIRROR)
+STANDALONE_LIBGCC_DATE := 2025-08-21
+STANDALONE_LIBGCC_MIRROR := https://github.com/osdev0/libgcc-binaries/releases/download/$(STANDALONE_LIBGCC_DATE)/libgcc-$(ARC_OPT_ARCH).a
 
+$(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a:
+	$(CURL) -Lo $(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a $(STANDALONE_LIBGCC_MIRROR)
 
 .PHONY: build
-build:
+build: $(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a
 	$(RM) -rf $(ARC_SOURCE_DIR)/build
 	$(MKDIR) -p $(ARC_SOURCE_DIR)/build
 
-# Is this really needed anymore?
-# LDFLAGS="-Wl,$(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a"
-	$(CD) $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) \
-			    meson setup $(MESON_FLAGS) -Dno_headers=true
+	$(CD) $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) LDFLAGS="-Wl,$(ARC_SOURCE_DIR)/libgcc-$(ARC_OPT_ARCH).a" \
+			    $(MESON) setup $(MESON_FLAGS) -Dno_headers=true -Dlibgcc_dependency=false
 	$(MESON) install -C $(ARC_SOURCE_DIR)/build
 
 

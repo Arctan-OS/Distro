@@ -232,13 +232,16 @@ download_source() {
 
 patch_source() {
     if [ -e $patch_path ]; then
+	echo "$EXTRA patching $srcdir with $patch_path"
 	cd $srcdir && patch -f -p1 < $patch_path
-	
+
 	if [[ $? != 0 ]]; then
 	    echo "$ERROR Failed to patch $basename"
 	    rm -rf $srcdir
 	    return 1
 	fi
+    else
+	echo "$EXTRA no patches to be applied"
     fi
 
     return 0
@@ -252,8 +255,9 @@ create_srcbuild() {
     # echo "$EXTRA copying symlinks in targets/$targets/$basename to .autogen/build/$basename"
     # cd $srcdir && find -type l -print0 | xargs -0 -I {} bash -c 'mkdir -p $3/$(dirname "$1") && cp -P "$2"/"{}" "$3"/"{}"' -- {} "$srcdir" "$srcbuild"
 
-    echo "$EXTRA copying source to .autogen/build/$basename"
-    cp -r $srcdir $srcbuild
+    mkdir -p $srcbuild
+    echo "$EXTRA copying $srcdir to $srcbuild"
+    cp -Pprf $srcdir/. $srcbuild
 }
 
 iget_source() {
@@ -273,9 +277,9 @@ iget_source() {
     patch_path="$srcdir.patch"
 
     srcclean="$ARC_CLEAN_SRC/$basename"
-    srcbuild="$ARC_BUILDS/$basename"
+    srcbuild="$ARC_BUILDS/$basename/src"
     
-    echo "$EXTRA attempting to get source directory for $basename.tar"
+    echo "$EXTRA attempting to get source directory for $basename"
     
     if [ -d $srcdir ]; then
 	[[ ! -d $srcbuild ]] && create_srcbuild
@@ -295,11 +299,12 @@ iget_source() {
     fi
     
     if [ -d $srcclean ]; then
-	cp -r $srcclean $mk
+	echo "$EXTRA $srcclean exists, copying it to $mk"
+	cp -Pprf $srcclean $mk
 	patch_source
 	[[ $? != 0 ]] && return 9
     elif [ -e $tar_path ]; then
-	mkdir $srcdir
+	mkdir -p $srcdir
 	# TODO: Most likely whatever service generated the tar
 	#       will have included the parent directory so this
 	#       is fine, but what if it didn't? How can this case 
@@ -314,8 +319,8 @@ iget_source() {
 
 	echo "$EXTRA extracted $basename.tar"
 	
-	echo "$EXTRA copying clean source to .autogen/src.clean/$basename"
-	cp -r $srcdir $srcclean
+	echo "$EXTRA copying extracted source to $srcclean"
+	cp -Pprf $srcdir $srcclean
 		
 	patch_source
 	[[ $? != 0 ]] && return 4
@@ -324,13 +329,18 @@ iget_source() {
 	return 2
     fi
 
-    if [ ! -d $ARC_SOURCE_DIR ]; then
+    if [ ! -d $srcdir ]; then
 	echo "$ERROR Failed to create source directory for target=$target"
 	return 1
     fi
-
+    
     create_srcbuild
     
+    if [ ! -d $srcbuild ] || [ ! -d $srcdir ] || [ ! -d $srcclean ]; then
+	echo "$ERROR Failed to create source directories for target=$target"
+	return 10
+    fi
+
     return 0
 }
 
@@ -395,8 +405,10 @@ build() {
     fi
     
     echo "$INFO Building target=$target"
-    ARC_SOURCE_DIR=$srcbuild make -C $mk build > $mk/Makefile.log
-
+    
+    cd $mk
+    ARC_SOURCE_DIR=$srcbuild make build
+    
     operation_suffix "build" $?
     return $?
 }
@@ -435,16 +447,18 @@ clean() {
 	   return $?
 	   ;;
     esac
-    
+
+    cd $mk
     if [[ $type == "rebuild" ]]; then
-	ARC_SOURCE_DIR=$srcbuild make -C $mk prepare-rebuild > $mk/Makefile.log
+	ARC_SOURCE_DIR=$srcbuild make prepare-rebuild
     else
-	ARC_SOURCE_DIR=$srcbuild make -C $mk clean > $mk/Makefile.log
+	ARC_SOURCE_DIR=$srcbuild make clean
 	rm -rf $srcdir
 	rm -rf $srcclean
 	rm -rf $srcbuild
     fi
 
+    
     operation_suffix "clean" $?
     return $?
 }
@@ -467,12 +481,12 @@ mkpatch() {
 	operation_suffix "mkpatch" 2
 	return $?
     fi
-    
+
     # TODO: Maybe use git format-patch?
     echo "$EXTRA creating patch"
     local clean_rel_path="$(realpath --relative-to=$srcdir $ARC_CLEAN_SRC/$basename)"
-    cd $srcdir && git diff --no-index $clean_rel_path . -p > $patch_path 2> $mk/git.errors
-
+    cd $srcdir && git diff --no-index $clean_rel_path . -p > $patch_path
+    
     case $? in
 	1) operation_suffix "mkpatch" 0  ;;
 	*) operation_suffix "mkpatch" $? ;;
@@ -482,6 +496,8 @@ mkpatch() {
 }
 
 cmdmux() {
+    local tmp_PWD=$PWD
+    
     case $1 in
 	"build")	
 	    build $target
@@ -504,7 +520,9 @@ cmdmux() {
 	    echo "Invalid command $1"
 	    print_usage
 	    ;;
-    esac    
+    esac
+
+    PWD=$tmp_PWD
 }
 
 main() {

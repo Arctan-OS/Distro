@@ -7,13 +7,17 @@ URLS := https://ftp.gnu.org/gnu/automake/$(NAME).tar.gz
 
 .PHONY: build
 build:
-	$(MKDIR) -p build
 
-	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
-	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
 
-	$(MAKE) -C build
-	$(MAKE) -C build install
+.PHONY: build
+build:
+	$(CD) $(ARC_SOURCE_DIR)/../          && \
+		$(MKDIR) -p build            && \
+		$(CD) build                  && \
+		../src/configure $(AC_FLAGS) && \
+		$(CD) ../                    && \
+		$(MAKE) -C build             && \
+                $(MAKE) -C build install
 
 # NOTE: There used to be an $(ARC_DESTDIR) prefixing the command
 #       below. Removed it as I don't think it is used

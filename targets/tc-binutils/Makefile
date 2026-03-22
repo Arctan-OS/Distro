@@ -7,15 +7,16 @@ URLS := https://ftp.gnu.org/gnu/binutils/$(NAME).tar.gz
 
 .PHONY: build
 build:
-	$(MKDIR) -p build
-
 # TODO: Fix some directories returning libtoolize:   error: AC_CONFIG_MACRO_DIRS([../../config]) conflicts with ACLOCAL_AMFLAGS=-I ..
-	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
+#	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 
-	$(CD) build && $(AC_CONFIG_PATH) $(AC_FLAGS)
-
-	$(MAKE) -C build
-	$(MAKE) -C build install
+	$(CD) $(ARC_SOURCE_DIR)/../          && \
+		$(MKDIR) -p build            && \
+		$(CD) build                  && \
+		../src/configure $(AC_FLAGS) && \
+		$(CD) ../                    && \
+		$(MAKE) -C build             && \
+                $(MAKE) -C build install
 
 .PHONY: clean
 clean:

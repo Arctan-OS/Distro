@@ -1,5 +1,11 @@
-DEPS :=  mlibc-headers autoconf-toolchain autoconf-2.69-toolchain \
-	 automake-toolchain libtool-toolchain gcc-toolchain mlibc-libraries \
+DEPS :=  \
+	 mlibc-headers \
+	 tc-autoconf \
+	 tc-autoconf-2.69 \
+	 tc-automake \
+	 tc-libtool \
+	 tc-gcc \
+	 mlibc-libraries \
 	 libgcc
 
 VERSION := dummy

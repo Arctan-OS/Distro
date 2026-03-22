@@ -3,7 +3,7 @@ VERSION := dummy
 NAME := libgcc-$(VERSION)
 URLS :=
 
-GCC_BUILD := $(ARC_TARGETS)/gcc-toolchain/build
+GCC_BUILD := $(ARC_TARGETS)/tc-gcc/build
 
 .PHONY: build
 build:

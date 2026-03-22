@@ -1,0 +1,10 @@
+diff --git a/../../../.autogen/clean/tc-automake-1.16.2/pre-inst-env.in b/./pre-inst-env.in
+index 62ad473..3ea6ada 100644
+--- a/../../../.autogen/clean/tc-automake-1.16.2/pre-inst-env.in
++++ b/./pre-inst-env.in
+@@ -38,4 +38,5 @@ export ACLOCAL_AUTOMAKE_DIR
+ ACLOCAL_PATH="$abs_top_srcdir/m4/acdir"
+ export ACLOCAL_PATH
+ 
++echo "pwd=$PWD | executing: $@"
+ exec "$@"
