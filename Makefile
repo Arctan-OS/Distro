@@ -24,40 +24,9 @@ CORES ?= $(shell echo $$(($(shell nproc) / 2)))
 MAKEFLAGS += -j$(CORES)
 export MAKEFLAGS
 
-BEAR  ?= bear
-CD    ?= cd
-CP    ?= cp
-CURL  ?= curl
-ECHO  ?= echo
-EXIT  ?= exit
-FIND  ?= find
-GIT   ?= git
-LN    ?= ln
-MESON ?= meson
-MKDIR ?= mkdir
-MV    ?= mv
-QEMU  ?= qemu-system-x86_64
-RM    ?= rm
-TAR   ?= tar
-TOUCH ?= touch
-
-export BEAR
-export CD
-export CP
-export CURL
-export ECHO
-export EXIT
-export FIND
-export GIT
-export LN
-export MESON
-export MKDIR
-export MV
-export QEMU
-export RM
-export TAR
-export TOUCH
-
+##############################################
+#                 Options                    #
+##############################################
 BSP   ?= GRUB
 ARCH  ?= x86-64
 LIBC  ?= mlibc
@@ -111,6 +80,51 @@ endif
 
 export ARC_OPT_DEBUG
 export ARC_DEF_DEBUG
+##############################################
+
+##############################################
+#               Executables                  #
+##############################################
+BEAR  ?= bear
+CD    ?= cd
+CHMOD ?= chmod
+CP    ?= cp
+CURL  ?= curl
+ECHO  ?= echo
+EXIT  ?= exit
+FIND  ?= find
+GIT   ?= git
+LN    ?= ln
+MESON ?= meson
+MKDIR ?= mkdir
+MV    ?= mv
+QEMU  ?= qemu-system-$(ARC_OPT_ARCH)
+RM    ?= rm
+TAR   ?= tar
+TOUCH ?= touch
+
+export BEAR
+export CD
+export CHMOD
+export CP
+export CURL
+export ECHO
+export EXIT
+export FIND
+export GIT
+export LN
+export MESON
+export MKDIR
+export MV
+export QEMU
+export RM
+export TAR
+export TOUCH
+##############################################
+
+##############################################
+#        Internal Paths, Variables           #
+##############################################
 
 ARC_SYSROOT       := $(ARC_ROOT)/sysroot
 ARC_INITRAMFS     := $(ARC_ROOT)/initramfs
@@ -150,6 +164,7 @@ INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE  := $(ARC_VOLATILE)/live_env.cpio
 
 ARC_PRODUCT_ENV_FLAGS := CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v"
+##############################################
 
 .PHONY: all
 all: $(ARC_SYSROOT)
@@ -157,8 +172,9 @@ all: $(ARC_SYSROOT)
 	$(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
-ifeq ($(wildcard $(ARC_ROOT)/bob.sh),)
+ifeq ($(wildcard $(BOB)),)
 	$(CURL) -o $(BOB) $(BOB_URL)
+	$(CHMOD) +x $(BOB)
 endif
 
 	$(BOB) build Arctan.iso
