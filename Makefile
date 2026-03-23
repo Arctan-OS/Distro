@@ -1,12 +1,16 @@
 # Installed on build machine:
 #  help2man - autoconf
 #  inetutils - autoconf `hostname`
+# uname -r: 6.19.6-arch1-1
 
-
-ARC_ROOT := $(shell pwd)
+ARC_ROOT := $(PWD)
 export ARC_ROOT
 
-ARC_PRODUCT := Arctan.iso
+ARC_PRODUCT := $(ARC_ROOT)Arctan.iso
+
+BOB_VERSION := c7af8b6e7ce31b5e63ae799e52b11a6db0cfbe38
+BOB_URL := https://raw.githubusercontent.com/Arctan-OS/bob/$(BOB_VERSION)/bob.sh
+BOB := $(ARC_ROOT)/bob-$(BOB_VERSION).sh
 
 QEMUFLAGS := -M q35,smm=off -m 32M -boot d -cdrom $(ARC_PRODUCT) \
 	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
@@ -153,7 +157,11 @@ all: $(ARC_SYSROOT)
 	$(MAKE) $(ARC_PRODUCT)
 
 $(ARC_PRODUCT):
-	./bob.sh build Arctan.iso
+ifeq ($(wildcard $(ARC_ROOT)/bob.sh),)
+	$(CURL) -o $(BOB) $(BOB_URL)
+endif
+
+	$(BOB) build Arctan.iso
 
 $(ARC_SYSROOT):
 	$(MKDIR) -p $(ARC_SYSROOT)             \
@@ -173,23 +181,22 @@ $(ARC_SYSROOT):
 .PHONY: clean-all
 clean-all:
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
-	./bob.sh clean all
+	$(BOB) clean all
 
 .PHONY: rebuild-all
 rebuild-all:
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
-	./bob.sh rebuild all
-
+	$(BOB) rebuild all
 
 TARGET ?=
 
 .PHONY: rebuild
 rebuild:
-	./bob.sh rebuild $(TARGET)
+	$(BOB) rebuild $(TARGET)
 
 .PHONY: mkpatch
 mkpatch:
-	./bob.sh mkpatch $(TARGET)
+	$(BOB) mkpatch $(TARGET)
 
 .PHONY: run
 run: $(ARC_PRODUCT)
