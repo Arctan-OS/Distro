@@ -1,9 +1,9 @@
 include $(ARC_BUILD_SUPPORT)/toolchain-flags
 
-DEPS := tc-binutils
+DEPS := toolchain/binutils
 VERSION := 15.2.0
-NAME := gcc-$(VERSION)
-URLS := https://ftp.gnu.org/gnu/gcc/$(NAME)/$(NAME).tar.gz
+NAME := toolchain/gcc-$(VERSION)
+URLS := https://ftp.gnu.org/gnu/gcc/gcc-$(VERSION)/gcc-$(VERSION).tar.gz
 
 AC_EXTRA_FLAGS := \
 		--enable-languages=c,c++,lto \
@@ -12,19 +12,14 @@ AC_EXTRA_FLAGS := \
 		--disable-multilib \
 		--enable-initfini-array
 
-# Originally configured so:
-#  src-dir/
-#  build-dir/
-#  Makefile < you are here
-# Now build-dir is in src-dir
 .PHONY: build
 build:
-	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libgcc
-	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(ARC_SOURCE_DIR)/libiberty
+	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(SOURCE_DIR)/libgcc
+	$(CP) -pv $(ARC_BUILD_PREFIX)/share/libtool/build-aux/{config.sub,config.guess,install-sh} $(SOURCE_DIR)/libiberty
 
-	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh -I"$$(realpath $(ARC_SOURCE_DIR)/config)"
+	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh -I"$$(realpath $(SOURCE_DIR)/config)"
 
-	$(CD) $(ARC_SOURCE_DIR)/../          && \
+	$(CD) $(SOURCE_DIR)/../              && \
 		$(MKDIR) -p build            && \
 		$(CD) build                  && \
 		../src/configure $(AC_FLAGS) && \
@@ -51,6 +46,10 @@ get-version:
 .PHONY: get-urls
 get-urls:
 	@echo $(URLS)
+
+.PHONY: get-basename
+get-basename:
+	@echo $(NAME)
 
 #.PHONY: get-source-dir
 #get-source-dir:

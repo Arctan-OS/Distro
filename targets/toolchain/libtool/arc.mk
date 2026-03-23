@@ -1,17 +1,13 @@
 include $(ARC_BUILD_SUPPORT)/toolchain-flags
 
-DEPS := 
-VERSION := 1.16.2
-NAME := automake-$(VERSION)
-URLS := https://ftp.gnu.org/gnu/automake/$(NAME).tar.gz
+DEPS :=
+VERSION := 2.4.7
+NAME := toolchain/libtool-$(VERSION)
+URLS := https://mirror.csclub.uwaterloo.ca/gnu/libtool/libtool-$(VERSION).tar.gz
 
 .PHONY: build
 build:
-
-
-.PHONY: build
-build:
-	$(CD) $(ARC_SOURCE_DIR)/../          && \
+	$(CD) $(SOURCE_DIR)/../              && \
 		$(MKDIR) -p build            && \
 		$(CD) build                  && \
 		../src/configure $(AC_FLAGS) && \
@@ -19,11 +15,8 @@ build:
 		$(MAKE) -C build             && \
                 $(MAKE) -C build install
 
-# NOTE: There used to be an $(ARC_DESTDIR) prefixing the command
-#       below. Removed it as I don't think it is used
-	$(MKDIR) -p $(ARC_HOST_PREFIX)/share/automake-1.16
-	$(CP) -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_HOST_PREFIX)/share/automake-1.16
-	$(CP) -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_BUILD_PREFIX)/share/automake-1.16
+	$(MKDIR) -p $(ARC_HOST_PREFIX)/share/libtool
+	$(CP) -pv $(ARC_BUILD_PREFIX)/share/autoconf/build-aux/config.sub $(ARC_HOST_PREFIX)/share/libtool
 
 .PHONY: clean
 clean:
@@ -44,6 +37,10 @@ get-version:
 .PHONY: get-urls
 get-urls:
 	@echo $(URLS)
+
+.PHONY: get-basename
+get-basename:
+	@echo $(NAME)
 
 #.PHONY: get-source-dir
 #get-source-dir:

@@ -2,12 +2,12 @@ include $(ARC_BUILD_SUPPORT)/toolchain-flags
 
 DEPS := 
 VERSION := 2.72
-NAME := autoconf-$(VERSION)
-URLS := https://ftp.gnu.org/gnu/autoconf/$(NAME).tar.gz
+NAME := toolchain/autoconf-$(VERSION)
+URLS := https://ftp.gnu.org/gnu/autoconf/autoconf-$(VERSION).tar.gz
 
 .PHONY: build
 build:
-	$(CD) $(ARC_SOURCE_DIR)/../          && \
+	$(CD) $(SOURCE_DIR)/../              && \
 		$(MKDIR) -p build            && \
 		$(CD) build                  && \
 		../src/configure $(AC_FLAGS) && \
@@ -34,6 +34,10 @@ get-version:
 .PHONY: get-urls
 get-urls:
 	@echo $(URLS)
+
+.PHONY: get-basename
+get-basename:
+	@echo $(NAME)
 
 #.PHONY: get-source-dir
 #get-source-dir:

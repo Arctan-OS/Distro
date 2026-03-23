@@ -2,15 +2,15 @@ include $(ARC_BUILD_SUPPORT)/toolchain-flags
 
 DEPS :=
 VERSION := 2.43
-NAME := binutils-$(VERSION)
-URLS := https://ftp.gnu.org/gnu/binutils/$(NAME).tar.gz
+NAME := toolchain/binutils-$(VERSION)
+URLS := https://ftp.gnu.org/gnu/binutils/binutils-$(VERSION).tar.gz
 
 .PHONY: build
 build:
 # TODO: Fix some directories returning libtoolize:   error: AC_CONFIG_MACRO_DIRS([../../config]) conflicts with ACLOCAL_AMFLAGS=-I ..
 #	$(ARC_BUILD_SUPPORT)/recursive_autoreconf.sh
 
-	$(CD) $(ARC_SOURCE_DIR)/../          && \
+	$(CD) $(SOURCE_DIR)/../              && \
 		$(MKDIR) -p build            && \
 		$(CD) build                  && \
 		../src/configure $(AC_FLAGS) && \
@@ -37,6 +37,10 @@ get-version:
 .PHONY: get-urls
 get-urls:
 	@echo $(URLS)
+
+.PHONY: get-basename
+get-basename:
+	@echo $(NAME)
 
 #.PHONY: get-source-dir
 #get-source-dir:

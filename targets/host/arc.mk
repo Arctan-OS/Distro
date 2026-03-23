@@ -1,14 +1,14 @@
-include $(ARC_BUILD_SUPPORT)/mlibc-flags
+DEPS := host/mlibc-headers \
+	host/mlibc-libraries \
+	host/libgcc
 
-DEPS :=
+VERSION := dummy
+URLS := 
 
 .PHONY: build
 build:
-	$(MKDIR) -p $(ARC_SOURCE_DIR)/build
+	@echo "Definitely building"
 
-	$(CD) $(ARC_SOURCE_DIR) && $(MESON) subprojects download
-	$(CD) $(ARC_SOURCE_DIR) && $(ARC_SET_COMPILER_ENV_FLAGS) $(MESON) setup $(MESON_FLAGS) -Dheaders_only=true
-	$(MESON) install -C $(ARC_SOURCE_DIR)/build
 .PHONY: clean
 clean:
 	@echo "Definitely cleaning"
@@ -36,3 +36,4 @@ get-urls:
 #.PHONY: use-source-dir-of
 #use-source-dir-of:
 #	@echo ""
+

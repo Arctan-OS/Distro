@@ -1,21 +1,24 @@
-DEPS :=
-VERSION := dummy
-NAME := libgcc-$(VERSION)
-URLS :=
+DEPS :=  \
+	 host/mlibc-headers \
+	 toolchain/autoconf \
+	 toolchain/autoconf-2.69 \
+	 toolchain/automake \
+	 toolchain/libtool \
+	 toolchain/gcc
 
-GCC_BUILD := $(ARC_TARGETS)/tc-gcc/build
+VERSION := dummy
+URLS := 
 
 .PHONY: build
 build:
-	$(MAKE) -C $(GCC_BUILD) all-target-libgcc
-	$(MAKE) -C $(GCC_BUILD) install-target-libgcc
+	@echo "Definitely building"
 
-.phony: clean
+.PHONY: clean
 clean:
 	@echo "Definitely cleaning"
 
 .PHONY: prepare-rebuild
-prepare-rebuild: clean
+prepare-rebuild:
 	@echo "Definitely preparing rebuild"
 
 .PHONY: get-deps
@@ -37,3 +40,4 @@ get-urls:
 #.PHONY: use-source-dir-of
 #use-source-dir-of:
 #	@echo ""
+

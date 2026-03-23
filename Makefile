@@ -6,11 +6,17 @@
 ARC_ROOT := $(PWD)
 export ARC_ROOT
 
-ARC_PRODUCT := $(ARC_ROOT)Arctan.iso
+ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
-BOB_VERSION := c7af8b6e7ce31b5e63ae799e52b11a6db0cfbe38
+BOB_VERSION := 0c4022e0c92c0e0672260b3ea6e03a7892238084
 BOB_URL := https://raw.githubusercontent.com/Arctan-OS/bob/$(BOB_VERSION)/bob.sh
 BOB := $(ARC_ROOT)/bob-$(BOB_VERSION).sh
+
+BOB_ROOT := $(ARC_ROOT)
+BOB_MAKEFILE_NAME := arc.mk
+
+export BOB_ROOT
+export BOB_MAKEFILE_NAME
 
 QEMUFLAGS := -M q35,smm=off -m 32M -boot d -cdrom $(ARC_PRODUCT) \
 	     -enable-kvm -cpu qemu64,+la57,+pcid -smp 4  \
@@ -166,17 +172,16 @@ LIVE_ENV_IMAGE  := $(ARC_VOLATILE)/live_env.cpio
 ARC_PRODUCT_ENV_FLAGS := CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v"
 ##############################################
 
+$(BOB):
+	$(CURL) -o $(BOB) $(BOB_URL)
+	$(CHMOD) +x $(BOB)
+
 .PHONY: all
 all: $(ARC_SYSROOT)
 	$(RM) -f $(ARC_PRODUCT) $(INITRAMFS_IMAGE)
 	$(MAKE) $(ARC_PRODUCT)
 
-$(ARC_PRODUCT):
-ifeq ($(wildcard $(BOB)),)
-	$(CURL) -o $(BOB) $(BOB_URL)
-	$(CHMOD) +x $(BOB)
-endif
-
+$(ARC_PRODUCT): $(BOB)
 	$(BOB) build Arctan.iso
 
 $(ARC_SYSROOT):
@@ -195,23 +200,23 @@ $(ARC_SYSROOT):
 	$(LN) -sfT $(ARC_HOST_PREFIX)/lib     $(ARC_SYSROOT)/lib64
 
 .PHONY: clean-all
-clean-all:
+clean-all: $(BOB)
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	$(BOB) clean all
 
 .PHONY: rebuild-all
-rebuild-all:
+rebuild-all: $(BOB)
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	$(BOB) rebuild all
 
 TARGET ?=
 
 .PHONY: rebuild
-rebuild:
+rebuild: $(BOB)
 	$(BOB) rebuild $(TARGET)
 
 .PHONY: mkpatch
-mkpatch:
+mkpatch: $(BOB)
 	$(BOB) mkpatch $(TARGET)
 
 .PHONY: run

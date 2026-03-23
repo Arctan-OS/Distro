@@ -1,15 +1,6 @@
-DEPS :=  \
-	 mlibc-headers \
-	 tc-autoconf \
-	 tc-autoconf-2.69 \
-	 tc-automake \
-	 tc-libtool \
-	 tc-gcc \
-	 mlibc-libraries \
-	 libgcc
-
+DEPS := 
 VERSION := dummy
-URLS := 
+URLS :=
 
 .PHONY: build
 build:
@@ -35,11 +26,6 @@ get-version:
 get-urls:
 	@echo $(URLS)
 
-#.PHONY: get-source-dir
-#get-source-dir:
-#	@echo ""
-
-#.PHONY: use-source-dir-of
-#use-source-dir-of:
-#	@echo ""
-
+.PHONY: get-source-dir
+get-source-dir:
+	@echo $(ARC_ROOT)
