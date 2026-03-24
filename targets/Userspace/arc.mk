@@ -1,9 +1,9 @@
-DEPS := Kernel Userspace
+DEPS := Kernel
 VERSION := dummy
+NAME := Userspace
 URLS :=
-NAME := BSP-$(BSP)
 DEV_SRC_DIR := $(ARC_ROOT)/../$(NAME)
-SRC_DIR := $(BOB_TARGETS)/bootstrapper/src
+SRC_DIR := $(BOB_TARGETS)/$(NAME)/src
 
 .PHONY: build
 build:

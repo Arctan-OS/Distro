@@ -8,7 +8,7 @@ export ARC_ROOT
 
 ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
-BOB_VERSION := 0c4022e0c92c0e0672260b3ea6e03a7892238084
+BOB_VERSION := 9b096c0eaad6083f40b2a83ce03415f4e56129cc
 BOB_URL := https://raw.githubusercontent.com/Arctan-OS/bob/$(BOB_VERSION)/bob.sh
 BOB := $(ARC_ROOT)/bob-$(BOB_VERSION).sh
 
@@ -183,6 +183,7 @@ all: $(ARC_SYSROOT)
 
 $(ARC_PRODUCT): $(BOB)
 	$(BOB) build Arctan.iso
+	$(MV) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
 
 $(ARC_SYSROOT):
 	$(MKDIR) -p $(ARC_SYSROOT)             \
@@ -208,6 +209,7 @@ clean-all: $(BOB)
 rebuild-all: $(BOB)
 	$(RM) -rf $(ARC_SYSROOT) $(ARC_VOLATILE)
 	$(BOB) rebuild all
+	$(MV) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
 
 TARGET ?=
 
