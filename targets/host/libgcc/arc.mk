@@ -7,7 +7,7 @@ USE_SRC_DIR_OF := toolchain/gcc
 .PHONY: build
 build:
 	$(CD) $(SOURCE_DIR)/../build && \
-		$(MAKE) all-target-libgcc
+		$(MAKE) all-target-libgcc && \
 		$(MAKE) install-target-libgcc
 
 .phony: clean
@@ -40,4 +40,4 @@ get-basename:
 
 .PHONY: use-source-dir-of
 use-source-dir-of:
-	@echo $(USR_SRC_DIR_OF)
+	@echo $(USE_SRC_DIR_OF)

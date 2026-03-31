@@ -17,7 +17,7 @@ build:
 
 .PHONY: clean
 clean:
-	@echo "Definitely cleaning"
+	$(RM) -rf $(SOURCE_DIR)/../build
 
 .PHONY: prepare-rebuild
 prepare-rebuild: clean

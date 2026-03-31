@@ -20,7 +20,7 @@ build:
 
 .PHONY: clean
 clean:
-	rm -rf build
+	$(RM) -rf $(SOURCE_DIR)/../build
 
 .PHONY: prepare-rebuild
 prepare-rebuild: clean

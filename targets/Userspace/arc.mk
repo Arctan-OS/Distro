@@ -31,10 +31,14 @@ get-urls:
 
 .PHONY: get-source-dir
 get-source-dir:
-ifeq ($(wildcard $(DEV_SRC_DIR),)
+ifneq ($(wildcard $(DEV_SRC_DIR)),)
 	@echo $(DEV_SRC_DIR)
 else
 	$(GIT) clone $(REPO_BASE_LINK)/$(NAME) $(SRC_DIR) --depth 1
 	$(GIT) --git-dir $(SRC_DIR) submodule update --init
 	@echo $(SRC_DIR)
 endif
+
+.PHONY: get-staging
+get-staging:
+	@echo "disabled"

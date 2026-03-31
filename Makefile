@@ -8,7 +8,7 @@ export ARC_ROOT
 
 ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
-BOB_VERSION := 9b096c0eaad6083f40b2a83ce03415f4e56129cc
+BOB_VERSION := 2ca3865f854cdf9e01ae82fb56e74fcf0644db84
 BOB_URL := https://raw.githubusercontent.com/Arctan-OS/bob/$(BOB_VERSION)/bob.sh
 BOB := $(ARC_ROOT)/bob-$(BOB_VERSION).sh
 
@@ -212,6 +212,10 @@ rebuild-all: $(BOB)
 	$(MV) $(ARC_INITRAMFS)/userspace.elf $(ARC_VOLATILE)
 
 TARGET ?=
+
+.PHONY: clean
+clean: $(BOB)
+	$(BOB) clean $(TARGET)
 
 .PHONY: rebuild
 rebuild: $(BOB)

@@ -2,6 +2,7 @@ DEPS := host/mlibc-headers \
 	host/mlibc-libraries \
 	host/libgcc
 
+
 VERSION := dummy
 URLS := 
 
@@ -29,9 +30,13 @@ get-version:
 get-urls:
 	@echo $(URLS)
 
-#.PHONY: get-source-dir
-#get-source-dir:
-#	@echo ""
+.PHONY: get-source-dir
+get-source-dir:
+	@echo "$(BOB_TARGETS)/host/.src"
+
+.PHONY: get-staging
+get-staging:
+	@echo "disabled"
 
 #.PHONY: use-source-dir-of
 #use-source-dir-of:

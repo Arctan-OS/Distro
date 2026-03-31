@@ -33,9 +33,13 @@ get-version:
 get-urls:
 	@echo $(URLS)
 
-#.PHONY: get-source-dir
-#get-source-dir:
-#	@echo ""
+.PHONY: get-source-dir
+get-source-dir:
+	@echo "$(BOB_TARGETS)/toolchain/.src"
+
+.PHONY: get-staging
+get-staging:
+	@echo "disabled"
 
 #.PHONY: use-source-dir-of
 #use-source-dir-of:
