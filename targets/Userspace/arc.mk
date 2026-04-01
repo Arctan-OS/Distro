@@ -42,3 +42,7 @@ endif
 .PHONY: get-staging
 get-staging:
 	@echo "disabled"
+
+.PHONY: will-complete
+will-complete:
+	@echo "no"

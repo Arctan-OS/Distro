@@ -41,6 +41,10 @@ get-source-dir:
 get-staging:
 	@echo "disabled"
 
+.PHONY: will-complete
+will-complete:
+	@echo "no"
+
 #.PHONY: use-source-dir-of
 #use-source-dir-of:
 #	@echo ""

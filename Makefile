@@ -8,7 +8,7 @@ export ARC_ROOT
 
 ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
-BOB_VERSION := 2ca3865f854cdf9e01ae82fb56e74fcf0644db84
+BOB_VERSION := 2f744555e5db013bd293c86d5dd0f523d4a9ae38
 BOB_URL := https://raw.githubusercontent.com/Arctan-OS/bob/$(BOB_VERSION)/bob.sh
 BOB := $(ARC_ROOT)/bob-$(BOB_VERSION).sh
 
