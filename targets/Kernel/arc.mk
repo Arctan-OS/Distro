@@ -7,6 +7,7 @@ SRC_DIR := $(BOB_TARGETS)/$(NAME)/src
 
 .PHONY: build
 build:
+	$(ARC_PRODUCT_ENV_FLAGS) \
 	$(BEAR) --output $(SOURCE_DIR)/compile_commands.json -- $(MAKE) -C $(SOURCE_DIR) all
 
 .PHONY: clean

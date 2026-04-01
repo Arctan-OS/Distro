@@ -173,6 +173,7 @@ INITRAMFS_IMAGE := $(ARC_VOLATILE)/initramfs.cpio
 LIVE_ENV_IMAGE  := $(ARC_VOLATILE)/live_env.cpio
 
 ARC_PRODUCT_ENV_FLAGS := CC=$(OS_TRIPLET)-gcc LD=$(OS_TRIPLET)-ld STRIP="$(OS_TRIPLET)-strip -v"
+export ARC_PRODUCT_ENV_FLAGS
 ##############################################
 
 $(BOB):
