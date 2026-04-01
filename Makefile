@@ -6,6 +6,9 @@
 ARC_ROOT := $(PWD)
 export ARC_ROOT
 
+ARC_REPO_BASE_LINK := https://github.com/Arctan-OS
+export ARC_REPO_BASE_LINK
+
 ARC_PRODUCT := $(ARC_ROOT)/Arctan.iso
 
 BOB_VERSION := 2f744555e5db013bd293c86d5dd0f523d4a9ae38

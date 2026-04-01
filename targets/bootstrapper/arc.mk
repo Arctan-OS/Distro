@@ -33,9 +33,11 @@ get-urls:
 get-source-dir:
 ifneq ($(wildcard $(DEV_SRC_DIR)),)
 	@echo $(DEV_SRC_DIR)
+else ifneq ($(wildcard $(SRC_DIR)),)
+	@echo $(SRC_DIR)
 else
-	$(GIT) clone $(REPO_BASE_LINK)/$(NAME) $(SRC_DIR) --depth 1
-	$(GIT) --git-dir $(SRC_DIR) submodule update --init
+	$(GIT) clone $(ARC_REPO_BASE_LINK)/$(NAME) $(SRC_DIR) --depth 1 &>> ../git.log
+	$(CD) $(SRC_DIR) && $(GIT) submodule update --init &>> ../git.log
 	@echo $(SRC_DIR)
 endif
 
